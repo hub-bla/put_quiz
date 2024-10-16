@@ -1,0 +1,23 @@
+name: Run linter
+
+on:
+    pull_request:
+
+jobs:
+    LINT:
+        name: 
+        runs-on: ubuntu-latest
+        
+        steps:
+          - name: Checkout Code
+            uses: actions/checkout@v4
+            with:
+                ref: ${{ github.head_ref }}
+          - name: Check Current Directory
+            run: |
+                  echo "Current Directory:"
+                  pwd  # Print the current working directory
+                  echo "Contents of Current Directory:"
+                  ls -la  # List all files and directories in the current directory
+          - name: Run Linter
+            run:  ./server/scripts/python/run-clang-format.py -r ./server/src ./server/apps ./server/include
