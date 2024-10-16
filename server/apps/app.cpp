@@ -14,7 +14,7 @@ int main() {
     });
   });
 
-  std::cout << "Passed so far!\n";
+  std::cout << "Passed so far! :)\n";
 
   // server.listen();
   return 0;
