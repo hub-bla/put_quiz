@@ -1,3 +1,6 @@
 [submodule "server/thirdparty/nlohmann_json"]
 	path = server/thirdparty/nlohmann_json
 	url = https://github.com/nlohmann/json.git
+[submodule "proxy/websockify"]
+	path = proxy/websockify
+	url = https://github.com/novnc/websockify
