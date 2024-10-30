@@ -1,0 +1,15 @@
+.animate-row {
+	transition: top 1s;
+}
+
+.standing-row {
+	background-color: #4c589f;
+	border-radius: 10px;
+
+	position: absolute;
+	height: 45px;
+	width: calc(100% - 30px);
+	display: flex;
+	align-items: center;
+	text-align: left;
+}

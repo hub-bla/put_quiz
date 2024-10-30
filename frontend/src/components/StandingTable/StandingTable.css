@@ -1,0 +1,35 @@
+.standing-table {
+	background-color: #597ea3;
+	border-radius: 10px;
+
+	color: #fff;
+	font-size: 20px;
+
+	width: 80%;
+	padding: 15px;
+	position: relative;
+}
+
+.table-headers {
+	display: flex;
+	font-weight: 500;
+	align-items: center;
+	text-align: left;
+}
+
+.rank {
+	margin-left: 15px;
+	flex: 1;
+}
+
+.username {
+	flex: 3;
+}
+
+.answers {
+	flex: 5;
+}
+
+.points {
+	flex: 1;
+}
