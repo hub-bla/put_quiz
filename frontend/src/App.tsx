@@ -1,6 +1,7 @@
 import "./App.css"
 import { useState, useCallback, useEffect } from "react"
 import useWebSocket, { ReadyState } from "react-use-websocket"
+import StandingTable from "./components/StandingTable/StandingTable"
 
 function App() {
 	//Public API that will echo messages sent to it back to the client
@@ -43,22 +44,32 @@ function App() {
 	}[readyState]
 
 	return (
-		<div>
-			<button onClick={handleClickChangeSocketUrl}>
-				Click Me to change Socket Url
-			</button>
-			<button
-				onClick={handleClickSendMessage}
-				disabled={readyState !== ReadyState.OPEN}>
-				Click Me to send 'Hello'
-			</button>
-			<span>The WebSocket is currently {connectionStatus}</span>
-			{lastMessage ? <span>Last message: {lastMessage.data}</span> : null}
-			<ul>
-				{messageHistory.map((message, idx) => (
-					<span key={idx}>{message ? message.data : null}</span>
-				))}
-			</ul>
+		<div
+			style={{
+				display: "flex",
+				flexDirection: "column",
+				justifyContent: "center",
+				alignItems: "center",
+				width: "100%",
+			}}>
+			<StandingTable />
+			<div>
+				<button onClick={handleClickChangeSocketUrl}>
+					Click Me to change Socket Url
+				</button>
+				<button
+					onClick={handleClickSendMessage}
+					disabled={readyState !== ReadyState.OPEN}>
+					Click Me to send 'Hello'
+				</button>
+				<span>The WebSocket is currently {connectionStatus}</span>
+				{lastMessage ? <span>Last message: {lastMessage.data}</span> : null}
+				<ul>
+					{messageHistory.map((message, idx) => (
+						<span key={idx}>{message ? message.data : null}</span>
+					))}
+				</ul>
+			</div>
 		</div>
 	)
 }
