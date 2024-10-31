@@ -8,8 +8,6 @@ interface StandingMessage {
 	standings: Array<Standing>
 }
 
-type StandingsPositions = { [userName: string]: number }
-
 const MOCK_DATA: StandingMessage = {
 	numberOfQuestions: 10,
 	standings: [
@@ -62,7 +60,6 @@ const BASE_TOP_POS = 65
 const HEADER_SPACE_POS = 40
 
 const StandingTable: React.FC = () => {
-	const [prevRowsPos, setPrevRowsPos] = useState<StandingsPositions>({})
 	const [standingsData, setStandingsData] = useState(MOCK_DATA)
 
 	useEffect(() => {
@@ -84,17 +81,6 @@ const StandingTable: React.FC = () => {
 			})
 		}, 3000)
 
-		const posObj: StandingsPositions = {}
-
-		standingsData["standings"]
-			.sort((standing1, standing2) => standing2["points"] - standing1["points"])
-			.map(
-				(standing, rank) =>
-					(posObj[standing["userName"]] = BASE_TOP_POS * (rank + 1))
-			)
-
-		setPrevRowsPos(posObj)
-
 		return () => {
 			clearTimeout(testId)
 		}
@@ -110,7 +96,6 @@ const StandingTable: React.FC = () => {
 					numberOfQuestions={MOCK_DATA["numberOfQuestions"]}
 					standing={standing}
 					startingPos={BASE_TOP_POS * (rank + 1)}
-					prevPos={prevRowsPos[standing["userName"]]}
 				/>
 			)
 		})
@@ -121,10 +106,10 @@ const StandingTable: React.FC = () => {
 			className='standing-table'>
 			<div>
 				<div className='table-headers' style={{ height: HEADER_SPACE_POS }}>
-					<div className='left-align-header  rank'>Rank</div>
+					<div className='left-align-header rank'>Rank</div>
 					<div className='left-align-header username'>Username</div>
 					<div className='left-align-header answers'>Answers</div>
-					<div className='left-align-header  points'>Points</div>
+					<div className='left-align-header points'>Points</div>
 				</div>
 				{tableData}
 			</div>

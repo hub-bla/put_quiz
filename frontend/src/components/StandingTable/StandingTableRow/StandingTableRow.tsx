@@ -3,12 +3,12 @@ import { Standing } from "../types"
 import AnswerBar from "./AnswersBar/AnswerBar"
 import "./StandingTableRow.css"
 import "../StandingTable.css"
+import useMediaQueries from "../../../utils/hooks/useMediaQueries"
 
 interface StandingTableRowProps {
 	rank: number
 	numberOfQuestions: number
 	startingPos: number
-	prevPos: number
 	standing: Standing
 }
 
@@ -16,11 +16,11 @@ const StandingTableRow: React.FC<StandingTableRowProps> = ({
 	rank,
 	numberOfQuestions,
 	startingPos,
-	prevPos,
 	standing,
 }) => {
-	const [rowTop, setRowTop] = useState(prevPos ? prevPos : startingPos)
+	const [rowTop, setRowTop] = useState(startingPos)
 	const { userName, answeredCorrectly, answeredWrong, points } = standing
+	const { md } = useMediaQueries()
 
 	useEffect(() => {
 		const moveRowTimeoutId = setTimeout(() => {
@@ -41,7 +41,7 @@ const StandingTableRow: React.FC<StandingTableRowProps> = ({
 					correctAnswers={answeredCorrectly}
 					wrongAnswers={answeredWrong}
 					numberOfQuestions={numberOfQuestions}
-					width={300}
+					width={md ? 200 : 300}
 					height={30}
 				/>
 			</div>

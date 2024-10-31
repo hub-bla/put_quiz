@@ -5,6 +5,8 @@
 .bar-background {
 	background-color: #d9d9d9;
 	border-radius: 10px;
+	border: 2px solid #d9d9d9;
+
 	padding: 1px;
 	flex: 5;
 	display: flex;
