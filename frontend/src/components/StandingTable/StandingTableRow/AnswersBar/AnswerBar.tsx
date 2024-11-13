@@ -37,10 +37,14 @@ const AnswerBar: React.FC<AnswerBarProps> = ({
 		<div style={{ width: width, height: height }} className='bar-background'>
 			<div
 				style={{ width: displayAnimation["correct"], height: height }}
-				className={`correct animate-bar`}></div>
+				className={`correct animate-bar ${
+					correctAnswers && "left-side-border-radius"
+				}`}></div>
 			<div
 				style={{ width: displayAnimation["wrong"], height: height }}
-				className={`wrong animate-bar`}></div>
+				className={`wrong animate-bar ${
+					!correctAnswers && "left-side-border-radius"
+				}`}></div>
 		</div>
 	)
 }

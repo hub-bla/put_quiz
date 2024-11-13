@@ -13,10 +13,13 @@
 	align-items: center;
 }
 
-.correct {
-	background-color: #4c9f7f;
+.left-side-border-radius {
 	border-top-left-radius: 10px;
 	border-bottom-left-radius: 10px;
+}
+
+.correct {
+	background-color: #4c9f7f;
 }
 
 .wrong {
