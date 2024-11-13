@@ -13,7 +13,7 @@ const MOCK_DATA: StandingMessage = {
 	standings: [
 		{
 			userName: "ktos2", // cap it to 20 chars
-			answeredCorrectly: 2,
+			answeredCorrectly: 0,
 			answeredWrong: 5,
 			points: 10000,
 		},
