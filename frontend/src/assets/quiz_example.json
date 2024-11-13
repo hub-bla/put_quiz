@@ -1,0 +1,80 @@
+{
+	"title": "General Knowledge Quiz",
+	"questions": [
+		{
+			"text": "What is the capital of France?",
+			"correctAnswerIdx": 2,
+			"answers": ["Rome", "Berlin", "Paris", "Madrid"]
+		},
+		{
+			"text": "Who wrote the novel '1984'?",
+			"correctAnswerIdx": 0,
+			"answers": [
+				"George Orwell",
+				"J.K. Rowling",
+				"F. Scott Fitzgerald",
+				"Ernest Hemingway"
+			]
+		},
+		{
+			"text": "What is the largest planet in our solar system?",
+			"correctAnswerIdx": 3,
+			"answers": ["Earth", "Venus", "Mars", "Jupiter"]
+		},
+		{
+			"text": "Which element has the chemical symbol 'O'?",
+			"correctAnswerIdx": 1,
+			"answers": ["Hydrogen", "Oxygen", "Nitrogen", "Carbon"]
+		},
+		{
+			"text": "How many continents are there on Earth?",
+			"correctAnswerIdx": 2,
+			"answers": ["5", "6", "7", "8"]
+		},
+		{
+			"text": "Which planet is known as the Red Planet?",
+			"correctAnswerIdx": 1,
+			"answers": ["Venus", "Mars", "Jupiter", "Saturn"]
+		},
+		{
+			"text": "What is the largest ocean on Earth?",
+			"correctAnswerIdx": 2,
+			"answers": [
+				"Atlantic Ocean",
+				"Indian Ocean",
+				"Pacific Ocean",
+				"Arctic Ocean"
+			]
+		},
+		{
+			"text": "Who painted the Mona Lisa?",
+			"correctAnswerIdx": 0,
+			"answers": [
+				"Leonardo da Vinci",
+				"Pablo Picasso",
+				"Vincent van Gogh",
+				"Claude Monet"
+			]
+		},
+		{
+			"text": "Which country is known as the Land of the Rising Sun?",
+			"correctAnswerIdx": 3,
+			"answers": ["China", "Thailand", "South Korea", "Japan"]
+		},
+		{
+			"text": "In what year did World War II end?",
+			"correctAnswerIdx": 2,
+			"answers": ["1943", "1944", "1945", "1946"]
+		},
+		{
+			"text": "What is the hardest natural substance on Earth?",
+			"correctAnswerIdx": 1,
+			"answers": ["Gold", "Diamond", "Iron", "Quartz"]
+		},
+		{
+			"text": "How many colors are in a rainbow?",
+			"correctAnswerIdx": 2,
+			"answers": ["5", "6", "7", "8"]
+		}
+	]
+}

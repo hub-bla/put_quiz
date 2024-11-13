@@ -1,0 +1,10 @@
+.questions {
+	display: flex;
+	flex-direction: column;
+}
+
+.answers {
+	display: grid;
+	gap: 20px;
+	grid-template-columns: 1fr 1fr;
+}
