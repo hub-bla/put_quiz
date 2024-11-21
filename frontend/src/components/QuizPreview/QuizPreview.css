@@ -8,3 +8,14 @@
 	gap: 20px;
 	grid-template-columns: 1fr 1fr;
 }
+
+.answer-preview {
+	background-color: #c43b6b;
+	border-radius: 20px;
+	padding: 20px 0;
+	color: #fff;
+}
+
+.correct-answer {
+	background-color: #4c9f7f;
+}

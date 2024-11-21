@@ -1,6 +1,7 @@
 import { QuizPreview } from "@/components/QuizPreview"
 import { Quiz } from "@/utils"
 import { ChangeEvent, useState } from "react"
+import "./createQuiz.css"
 
 export const CreateQuiz: React.FC = () => {
 	const [quizData, setQuizData] = useState<Quiz>()
@@ -15,8 +16,10 @@ export const CreateQuiz: React.FC = () => {
 
 	return (
 		<div>
-			<input type='file' accept='.json' onChange={getQuizData} />
-			<button disabled={!quizData}>Create game</button>
+			<div className='manipulation'>
+				<button disabled={!quizData}>Create game</button>
+				<input type='file' accept='.json' onChange={getQuizData} />
+			</div>
 			{quizData && <QuizPreview quiz={quizData} />}
 		</div>
 	)
