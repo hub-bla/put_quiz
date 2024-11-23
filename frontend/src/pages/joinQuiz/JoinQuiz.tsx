@@ -3,14 +3,17 @@ import "./joinQuiz.css"
 
 export const JoinQuiz: React.FC = () => {
 	const [formData, setFromData] = useState({
-		gameCode: null,
-		username: null,
+		gameCode: "",
+		username: "",
 	})
 
 	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { id, value } = e.target
 
-		setFromData((prevFormData) => ({ ...prevFormData, [id]: value }))
+		setFromData((prevFormData) => ({ 
+			...prevFormData,
+			[id]: id === "gameCode" ? value.toLowerCase() : value
+		}))
 	}
 
 	const handleSubmit = () => {
@@ -25,6 +28,7 @@ export const JoinQuiz: React.FC = () => {
 				type='text'
 				placeholder='Enter game code'
 				onChange={handleInputChange}
+				value={formData.gameCode}
 				required
 			/>
 			<input
@@ -33,6 +37,7 @@ export const JoinQuiz: React.FC = () => {
 				type='text'
 				placeholder='Enter your username'
 				onChange={handleInputChange}
+				value={formData.username}
 				required
 			/>
 			<button type='submit'>Play</button>
