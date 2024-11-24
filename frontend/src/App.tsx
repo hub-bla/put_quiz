@@ -26,18 +26,26 @@ function App() {
 		[]
 	)
 
-	// const stringToUint8 = (data, size) => {
-	// 	const textEncoder = new TextEncoder()
-	// 	const encodedData = textEncoder.encode(data)
-	// 	const paddedArray = new Uint8Array(size)
-	// 	paddedArray.set(encodedData, 0)
-	// 	return paddedArray
-	// }
+	const stringToUint8 = (data, size) => {
+		const textEncoder = new TextEncoder()
+		const encodedData = textEncoder.encode(data)
+		const paddedArray = new Uint8Array(size)
+		paddedArray.set(encodedData, 0)
+		return paddedArray
+	}
 
-	// const handleClickSendMessage = useCallback(() => {
-	// 	console.log("sending")
-	// 	sendMessage(stringToUint8("dziala", 20))
-	// }, [])
+	const handleClickSendMessage = useCallback(() => {
+		const jsonStr = `{"bajojajo": 4}`
+		const headerStr = `dziala\n\n${jsonStr.length}\n\n`
+
+		const header = stringToUint8(headerStr, 100)
+
+		const message = stringToUint8(jsonStr, jsonStr.length);
+		const combined = new Uint8Array(header.length + message.length)
+		combined.set(header, 0);
+		combined.set(message, header.length)
+		sendMessage(combined)
+	}, [])
 
 	const connectionStatus = {
 		[ReadyState.CONNECTING]: "Connecting",
@@ -46,10 +54,13 @@ function App() {
 		[ReadyState.CLOSED]: "Closed",
 		[ReadyState.UNINSTANTIATED]: "Uninstantiated",
 	}[readyState]
+	
+
+	lastMessage?.data.text().then((text) => console.log(text))
 
 	return (
 		<>
-			{/* <div
+			<div
 				style={{
 					display: "flex",
 					flexDirection: "column",
@@ -57,7 +68,6 @@ function App() {
 					alignItems: "center",
 					width: "100%",
 				}}>
-				<StandingTable />
 				<div>
 					<button onClick={handleClickChangeSocketUrl}>
 						Click Me to change Socket Url
@@ -67,15 +77,15 @@ function App() {
 						disabled={readyState !== ReadyState.OPEN}>
 						Click Me to send 'Hello'
 					</button>
-					<span>The WebSocket is currently {connectionStatus}</span>
-					{lastMessage ? <span>Last message: {lastMessage.data}</span> : null}
-					<ul>
+					{/* <span>The WebSocket is currently {connectionStatus}</span> */}
+					{/* {lastMessage ? <span>Last message: {lastMessage.data}</span> : null} */}
+					{/* <ul>
 						{messageHistory.map((message, idx) => (
 							<span key={idx}>{message ? message.data : null}</span>
 						))}
-					</ul>
+					</ul> */}
 				</div>
-			</div> */}
+			</div>
 			<RouterProvider router={router} fallbackElement={<div>Loading...</div>} />
 		</>
 	)

@@ -4,14 +4,14 @@
 
 
 # Configuration directories and files
-SourceDirectory: /home/hubert/crap/test_ci_opensuse
-BuildDirectory: /home/hubert/crap/test_ci_opensuse/cmake-build-debug
+SourceDirectory: /home/hubert/Desktop/studia/sieci_komputerowe2/put_quiz/server
+BuildDirectory: /home/hubert/Desktop/studia/sieci_komputerowe2/put_quiz/server/cmake-build-debug
 
 # Where to place the cost data store
 CostDataFile: 
 
 # Site is something like machine.domain, i.e. pragmatic.crd
-Site: Hubert-Matebook
+Site: hubert
 
 # Build name is osname-revision-compiler, i.e. Linux-2.4.2-2smp-c++
 BuildName: Linux-c++
@@ -27,8 +27,8 @@ SubmitInactivityTimeout:
 NightlyStartTime: 00:00:00 EDT
 
 # Commands for the build/test/submit cycle
-ConfigureCommand: "/home/hubert/.cache/JetBrains/RemoteDev/dist/b21c2b5ff1f19_CLion-2023.2.2/bin/cmake/linux/x64/bin/cmake" "/home/hubert/crap/test_ci_opensuse"
-MakeCommand: /home/hubert/.cache/JetBrains/RemoteDev/dist/b21c2b5ff1f19_CLion-2023.2.2/bin/cmake/linux/x64/bin/cmake --build . --config "${CTEST_CONFIGURATION_TYPE}"
+ConfigureCommand: "/snap/clion/296/bin/cmake/linux/x64/bin/cmake" "/home/hubert/Desktop/studia/sieci_komputerowe2/put_quiz/server"
+MakeCommand: /snap/clion/296/bin/cmake/linux/x64/bin/cmake --build . --config "${CTEST_CONFIGURATION_TYPE}"
 DefaultCTestConfigurationType: Release
 
 # version control
@@ -45,7 +45,7 @@ SVNOptions:
 SVNUpdateOptions: 
 
 # Git options
-GITCommand: /usr/bin/git
+GITCommand: 
 GITInitSubmodules: 
 GITUpdateOptions: 
 GITUpdateCustom: 
@@ -58,9 +58,9 @@ P4UpdateOptions:
 P4UpdateCustom: 
 
 # Generic update command
-UpdateCommand: /usr/bin/git
+UpdateCommand: 
 UpdateOptions: 
-UpdateType: git
+UpdateType: 
 
 # Compiler info
 Compiler: /usr/bin/c++
@@ -76,7 +76,7 @@ CudaSanitizerCommand:
 CudaSanitizerCommandOptions: 
 MemoryCheckType: 
 MemoryCheckSanitizerOptions: 
-MemoryCheckCommand: /usr/bin/valgrind
+MemoryCheckCommand: MEMORYCHECK_COMMAND-NOTFOUND
 MemoryCheckCommandOptions: 
 MemoryCheckSuppressionFile: 
 
