@@ -1,4 +1,4 @@
-# Install script for directory: /home/hubert/crap/test_ci_opensuse/src
+# Install script for directory: /home/hubert/Desktop/studia/sieci_komputerowe2/put_quiz/server/src
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
