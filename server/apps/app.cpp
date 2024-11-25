@@ -1,4 +1,7 @@
+#include "nlohmann/json.hpp"
+#include "server/game.hpp"
 #include <ctime>
+#include <functional>
 #include <iostream>
 #include <netinet/in.h>
 #include <string>
@@ -6,9 +9,6 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <unordered_map>
-#include <functional>
-#include "server/game.hpp"
-#include "nlohmann/json.hpp"
 
 using json = nlohmann::json;
 
@@ -23,32 +23,30 @@ unordered_map<int, shared_ptr<User>> users;
 int epoll_fd;
 
 void disconnect(json message, shared_ptr<User> user) {
-    int client_fd = user->get_sock_fd();
-    cout << "Client: " << client_fd << " disconnected" << endl;
-    epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_fd, NULL);
-    close(client_fd);
-    users.erase(client_fd);
+  int client_fd = user->get_sock_fd();
+  cout << "Client: " << client_fd << " disconnected" << endl;
+  epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_fd, NULL);
+  close(client_fd);
+  users.erase(client_fd);
 }
 
 void ping(json message, shared_ptr<User> user) {
-    int client_fd = user->get_sock_fd();
-    epoll_event client_events;
-    client_events.data.fd = client_fd;
-    std::cout << "Message from client: " << message << std::endl;
-    client_events.events = EPOLLIN | EPOLLOUT;
-    epoll_ctl(epoll_fd, EPOLL_CTL_MOD, client_fd, &client_events);
+  int client_fd = user->get_sock_fd();
+  epoll_event client_events;
+  client_events.data.fd = client_fd;
+  std::cout << "Message from client: " << message << std::endl;
+  client_events.events = EPOLLIN | EPOLLOUT;
+  epoll_ctl(epoll_fd, EPOLL_CTL_MOD, client_fd, &client_events);
 
-    user->add_message_to_send_buffer("pong");
+  user->add_message_to_send_buffer("pong");
 }
 
 using CallbackType = std::function<void(json, shared_ptr<User>)>;
 
-unordered_map<std::string, CallbackType> callbacks {
-        {"DISCONNECT", disconnect},
-        {"ping", ping}
+unordered_map<std::string, CallbackType> callbacks{{"DISCONNECT", disconnect},
+                                                   {"ping", ping}
 
 };
-
 
 std::string generate_game_code(const int len = 8) {
   static const char alphanum[] = "0123456789"
@@ -134,9 +132,9 @@ int main() {
 
         if (!type.empty()) {
 
-            // now here we can do something like callbacks[type](message, user)
-            // code becomes more modular
-            callbacks[type](message, user);
+          // now here we can do something like callbacks[type](message, user)
+          // code becomes more modular
+          callbacks[type](message, user);
         }
       }
 

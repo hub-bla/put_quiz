@@ -15,6 +15,4 @@ void User::add_message_to_send_buffer(const std::string &message) {
   messenger->add_to_send_buffer(message);
 };
 
-int User::get_sock_fd(){
-    return sock_fd;
-}
+int User::get_sock_fd() { return sock_fd; }
