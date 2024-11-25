@@ -40,7 +40,7 @@ std::pair<std::string, json> MessageHandler::readMessage() {
   int bytes_read = read(client_fd, readBuffer.data(), bytes_to_read);
 
   if (!bytes_read) {
-    return {"EOF", nullptr};
+    return {"DISCONNECT", nullptr};
   }
 
   if (read_header > 0) {
@@ -60,7 +60,6 @@ std::pair<std::string, json> MessageHandler::readMessage() {
   }
 
   if (read_header == 0) {
-
     if (read_message_size == 0) {
       // first 20 char are the type
       int count = 0;
@@ -104,7 +103,6 @@ std::pair<std::string, json> MessageHandler::readMessage() {
       read_message_size =
           std::stoi(message_header.substr(message_size_start_idx, idx - 2)) -
           currently_read.size();
-
     } else {
       currently_read.append(readBuffer.data());
     }

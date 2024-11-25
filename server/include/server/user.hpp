@@ -15,4 +15,5 @@ public:
   std::pair<std::string, json> read_message();
   void add_message_to_send_buffer(const std::string &message);
   bool send_buffered();
+  int get_sock_fd();
 };

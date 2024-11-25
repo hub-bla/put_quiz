@@ -6,8 +6,11 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <unordered_map>
-
+#include <functional>
 #include "server/game.hpp"
+#include "nlohmann/json.hpp"
+
+using json = nlohmann::json;
 
 #define SERVER_PORT 8913
 #define QUEUE_SIZE 1
@@ -16,6 +19,36 @@ using namespace std;
 unordered_map<std::string, unique_ptr<Game>> games;
 
 unordered_map<int, shared_ptr<User>> users;
+
+int epoll_fd;
+
+void disconnect(json message, shared_ptr<User> user) {
+    int client_fd = user->get_sock_fd();
+    cout << "Client: " << client_fd << " disconnected" << endl;
+    epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_fd, NULL);
+    close(client_fd);
+    users.erase(client_fd);
+}
+
+void ping(json message, shared_ptr<User> user) {
+    int client_fd = user->get_sock_fd();
+    epoll_event client_events;
+    client_events.data.fd = client_fd;
+    std::cout << "Message from client: " << message << std::endl;
+    client_events.events = EPOLLIN | EPOLLOUT;
+    epoll_ctl(epoll_fd, EPOLL_CTL_MOD, client_fd, &client_events);
+
+    user->add_message_to_send_buffer("pong");
+}
+
+using CallbackType = std::function<void(json, shared_ptr<User>)>;
+
+unordered_map<std::string, CallbackType> callbacks {
+        {"DISCONNECT", disconnect},
+        {"ping", ping}
+
+};
+
 
 std::string generate_game_code(const int len = 8) {
   static const char alphanum[] = "0123456789"
@@ -39,7 +72,7 @@ int main() {
   srand((unsigned)time(NULL) * getpid());
 
   int server_fd;
-  int epoll_fd = epoll_create1(0);
+  epoll_fd = epoll_create1(0);
   epoll_event ee;
 
   server_fd = socket(PF_INET, SOCK_STREAM, 0);
@@ -52,7 +85,6 @@ int main() {
   stAddr.sin_family = AF_INET;
   stAddr.sin_addr.s_addr = htonl(INADDR_ANY);
   stAddr.sin_port = htons(SERVER_PORT);
-
   /* bind a name to a socket */
   auto nBind =
       bind(server_fd, (struct sockaddr *)&stAddr, sizeof(struct sockaddr));
@@ -101,22 +133,10 @@ int main() {
         const auto [type, message] = user->read_message();
 
         if (!type.empty()) {
-          if (type == "EOF") { // close connection
-            cout << "Client: " << client_fd << " disconnected" << endl;
-            epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_fd, NULL);
-            close(client_fd);
-            users.erase(client_fd);
-            continue;
-          }
 
-          epoll_event client_events;
-          client_events.data.fd = client_fd;
-          std::cout << "Message from client: " << message << std::endl;
-          std::cout << "Now send them smile!" << std::endl;
-          client_events.events = EPOLLIN | EPOLLOUT;
-          epoll_ctl(epoll_fd, EPOLL_CTL_MOD, client_fd, &client_events);
-
-          user->add_message_to_send_buffer(":)");
+            // now here we can do something like callbacks[type](message, user)
+            // code becomes more modular
+            callbacks[type](message, user);
         }
       }
 
