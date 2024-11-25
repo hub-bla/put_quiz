@@ -14,3 +14,5 @@ std::pair<std::string, json> User::read_message() {
 void User::add_message_to_send_buffer(const std::string &message) {
   messenger->add_to_send_buffer(message);
 };
+
+int User::get_sock_fd() { return sock_fd; }
