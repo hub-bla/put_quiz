@@ -58,7 +58,7 @@ void create_game(json message, shared_ptr<Client> client) {
 
   std::string game_code = generate_game_code();
   games[game_code] = make_unique<Game>(game_code);
-
+  cout << "create game" << endl;
   shared_ptr<Host> host = make_shared<Host>(client_fd, delete_game, game_code);
   clients[client_fd] = static_pointer_cast<Client>(host);
 }
@@ -139,7 +139,7 @@ int main() {
   epoll_ctl(epoll_fd, EPOLL_CTL_ADD, server_fd, &ee);
 
   // just for checking the build
-  return 0;
+  //  return 0;
 
   while (1) {
 

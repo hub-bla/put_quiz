@@ -34,7 +34,9 @@ std::pair<std::string, json> MessageHandler::readMessage() {
   const int bytes_to_read =
       read_header > 0 ? read_header : read_message_size - currently_read.size();
 
-  std::cout << "MESSAGE HANDLER: bytes to read " << bytes_to_read << std::endl;
+  std::cout << "MESSAGE HANDLER: bytes to read " << bytes_to_read << " "
+            << currently_read.size() << std::endl;
+
   std::vector<char> readBuffer(bytes_to_read);
 
   int bytes_read = read(client_fd, readBuffer.data(), bytes_to_read);
@@ -47,7 +49,9 @@ std::pair<std::string, json> MessageHandler::readMessage() {
     message_header.append(readBuffer.data());
     read_header -= bytes_read;
   }
-
+  std::cout << "read header: " << read_header << std::endl;
+  std::cout << currently_read << std::endl;
+  std::cout << readBuffer.size() << std::endl;
   if (read_header < 0) {
     // no we have full header
     const auto surplus = (message_header.size() - message_header_size);
@@ -104,7 +108,7 @@ std::pair<std::string, json> MessageHandler::readMessage() {
           std::stoi(message_header.substr(message_size_start_idx, idx - 2)) -
           currently_read.size();
     } else {
-      currently_read.append(readBuffer.data());
+      currently_read.append(readBuffer.begin(), readBuffer.end());
     }
   }
 
@@ -117,6 +121,7 @@ std::pair<std::string, json> MessageHandler::readMessage() {
     message_header = "";
     read_header = 100;
     read_message_size = 0;
+    std::cout << "Cleaned" << std::endl;
     return {message_type, json_message};
   }
 
