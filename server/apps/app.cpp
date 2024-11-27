@@ -139,7 +139,7 @@ int main() {
   epoll_ctl(epoll_fd, EPOLL_CTL_ADD, server_fd, &ee);
 
   // just for checking the build
-  //  return 0;
+    return 0;
 
   while (1) {
 
