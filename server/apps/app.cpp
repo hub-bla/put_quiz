@@ -1,5 +1,7 @@
 #include "nlohmann/json.hpp"
 #include "server/game.hpp"
+#include "server/host.hpp"
+#include "server/player.hpp"
 #include <ctime>
 #include <functional>
 #include <iostream>
@@ -18,35 +20,19 @@ using namespace std;
 
 unordered_map<std::string, unique_ptr<Game>> games;
 
-unordered_map<int, shared_ptr<User>> users;
+unordered_map<int, shared_ptr<Client>> clients;
 
 int epoll_fd;
 
-void disconnect(json message, shared_ptr<User> user) {
-  int client_fd = user->get_sock_fd();
-  cout << "Client: " << client_fd << " disconnected" << endl;
-  epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_fd, NULL);
-  close(client_fd);
-  users.erase(client_fd);
+void delete_game(std::string game_code) {
+  // function that will be based to the host constructor
+  cout << "delete whole game" << endl;
+  games.erase(game_code);
 }
 
-void ping(json message, shared_ptr<User> user) {
-  int client_fd = user->get_sock_fd();
-  epoll_event client_events;
-  client_events.data.fd = client_fd;
-  std::cout << "Message from client: " << message << std::endl;
-  client_events.events = EPOLLIN | EPOLLOUT;
-  epoll_ctl(epoll_fd, EPOLL_CTL_MOD, client_fd, &client_events);
-
-  user->add_message_to_send_buffer("pong");
+void remove_client_from_game(std::string game_code) {
+  cout << "remove client from game" << endl;
 }
-
-using CallbackType = std::function<void(json, shared_ptr<User>)>;
-
-unordered_map<std::string, CallbackType> callbacks{{"DISCONNECT", disconnect},
-                                                   {"ping", ping}
-
-};
 
 std::string generate_game_code(const int len = 8) {
   static const char alphanum[] = "0123456789"
@@ -59,12 +45,59 @@ std::string generate_game_code(const int len = 8) {
   }
 
   // generated code already exists -> try again
-  if (games.find(new_game_code) == games.end()) {
+  if (games.find(new_game_code) != games.end()) {
     return generate_game_code();
   }
 
   return new_game_code;
 }
+
+void create_game(json message, shared_ptr<Client> client) {
+  const int &client_fd = client->get_sock_fd();
+  // TODO: check if host already send quiz
+
+  std::string game_code = generate_game_code();
+  games[game_code] = make_unique<Game>(game_code);
+
+  shared_ptr<Host> host = make_shared<Host>(client_fd, delete_game, game_code);
+  clients[client_fd] = static_pointer_cast<Client>(host);
+}
+
+void join_game(json message, shared_ptr<Client> client) {
+  const int &client_fd = client->get_sock_fd();
+  std::string game_code = message["game_code"];
+  shared_ptr<Player> player =
+      make_shared<Player>(client_fd, remove_client_from_game, game_code);
+  clients[client_fd] = static_pointer_cast<Client>(player);
+}
+
+void disconnect(json message, shared_ptr<Client> client) {
+  const int &client_fd = client->get_sock_fd();
+  cout << "Client: " << client_fd << " disconnected" << endl;
+  client->disconnect(epoll_fd); // removes from epoll and closes socket
+  clients.erase(client_fd);
+  cout << "Client: " << client_fd << " disconnected" << endl;
+}
+
+void ping(json message, shared_ptr<Client> client) {
+  const int &client_fd = client->get_sock_fd();
+  epoll_event client_events;
+  client_events.data.fd = client_fd;
+  std::cout << "Message from client: " << message << std::endl;
+  client_events.events = EPOLLIN | EPOLLOUT;
+  epoll_ctl(epoll_fd, EPOLL_CTL_MOD, client_fd, &client_events);
+
+  client->add_message_to_send_buffer("pong");
+}
+
+using CallbackType = std::function<void(json, shared_ptr<Client>)>;
+
+unordered_map<std::string, CallbackType> callbacks{{"DISCONNECT", disconnect},
+                                                   {"ping", ping},
+                                                   {"create_game", create_game},
+                                                   {"join_game", join_game}
+
+};
 
 int main() {
   srand((unsigned)time(NULL) * getpid());
@@ -106,7 +139,7 @@ int main() {
   epoll_ctl(epoll_fd, EPOLL_CTL_ADD, server_fd, &ee);
 
   // just for checking the build
-  return 0;
+  //  return 0;
 
   while (1) {
 
@@ -115,7 +148,7 @@ int main() {
       int client_fd = accept(server_fd, nullptr, nullptr);
       epoll_event client_events;
       cout << "Accepted client: " << client_fd << endl;
-      users[client_fd] = make_shared<User>(client_fd);
+      clients[client_fd] = make_shared<Client>(client_fd);
       client_events.events = EPOLLIN | EPOLLHUP;
       client_events.data.fd = client_fd;
       epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &client_events);
@@ -123,23 +156,23 @@ int main() {
     } else {
       const auto client_fd = ee.data.fd;
 
-      const auto &user = users[client_fd];
+      const auto &client = clients[client_fd];
 
       if (ee.events & EPOLLIN) {
 
         // set EPOLLOUT if needed to send a response
-        const auto [type, message] = user->read_message();
+        const auto [type, message] = client->read_message();
 
         if (!type.empty()) {
 
-          // now here we can do something like callbacks[type](message, user)
+          // now here we can do something like callbacks[type](message, client)
           // code becomes more modular
-          callbacks[type](message, user);
+          callbacks[type](message, client);
         }
       }
 
       if (ee.events & EPOLLOUT) {
-        bool done = user->send_buffered();
+        bool done = client->send_buffered();
 
         if (done) {
           epoll_event client_events;

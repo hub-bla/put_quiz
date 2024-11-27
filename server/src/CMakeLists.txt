@@ -1,8 +1,10 @@
 file(GLOB HEADER_LIST CONFIGURE_DEPENDS "${CrappyTest_SOURCE_DIR}/include/server/*.hpp")
 add_library(server_lib ${HEADER_LIST}
-        user.cpp
         message_handler.cpp
-        game.cpp)
+        game.cpp
+        client.cpp
+        host.cpp
+        player.cpp)
 
 target_include_directories(server_lib PUBLIC ../include)
 target_link_libraries(server_lib PRIVATE nlohmann_json)
