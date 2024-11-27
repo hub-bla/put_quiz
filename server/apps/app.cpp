@@ -61,6 +61,17 @@ void create_game(json message, shared_ptr<Client> client) {
   cout << "create game" << endl;
   shared_ptr<Host> host = make_shared<Host>(client_fd, delete_game, game_code);
   clients[client_fd] = static_pointer_cast<Client>(host);
+  json json_game_code;
+
+  json_game_code["gameCode"] = game_code;
+
+  epoll_event client_events{};
+  client_events.data.fd = client_fd;
+  client_events.events = EPOLLIN | EPOLLOUT;
+  epoll_ctl(epoll_fd, EPOLL_CTL_MOD, client_fd, &client_events);
+  string test = json_game_code.dump();
+  cout << test << endl;
+  clients[client_fd]->add_message_to_send_buffer(test);
 }
 
 void join_game(json message, shared_ptr<Client> client) {
@@ -175,6 +186,7 @@ int main() {
         bool done = client->send_buffered();
 
         if (done) {
+          cout << "Message was sent" << endl;
           epoll_event client_events;
           client_events.data.fd = client_fd;
           client_events.events = EPOLLIN | EPOLLHUP;
