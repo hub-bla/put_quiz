@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 
-function useMediaQuery(query: string) {
+const useMediaQuery = (query: string) => {
 	const mediaQuery = useMemo(() => window.matchMedia(query), [query])
 	const [match, setMatch] = useState(mediaQuery.matches)
 
@@ -14,10 +14,8 @@ function useMediaQuery(query: string) {
 	return match
 }
 
-function useMediaQueries() {
+export const useMediaQueries = () => {
 	const md = useMediaQuery("(max-width: 1080px)")
 
 	return { md }
 }
-
-export default useMediaQueries

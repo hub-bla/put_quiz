@@ -1,0 +1,14 @@
+.player {
+	width: 200px;
+	background-color: #c43b6b;
+	text-align: left;
+	padding: 10px;
+	border-radius: 10px;
+	color: #fff;
+}
+
+.players {
+	display: flex;
+	flex-direction: column;
+	gap: 50px;
+}
