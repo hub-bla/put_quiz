@@ -1,13 +1,15 @@
 #include "server/message_handler.hpp"
 #include <iostream>
-MessageHandler::MessageHandler(int fd) : client_fd(fd) {}
+MessageHandler::MessageHandler(int fd) : client_fd(fd) {
+  write_buffer.push("First string");
+  write_buffer.push("Second string");
+}
 
 MessageHandler::~MessageHandler() {}
 
 bool MessageHandler::sendBuffered() {
   if (currently_sending.empty()) {
     if (write_buffer.empty()) {
-
       return true;
     }
     currently_sending = write_buffer.front();
@@ -25,6 +27,11 @@ bool MessageHandler::sendBuffered() {
     return false;
   }
 
+  if (!write_buffer.empty()) {
+    currently_sending = write_buffer.front();
+    write_buffer.pop();
+    return false;
+  }
   return true;
 }
 
