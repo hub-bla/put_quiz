@@ -22,7 +22,7 @@ public:
   MessageHandler(int fd);
   ~MessageHandler();
 
-  void add_to_send_buffer(const std::string& type, const std::string& message);
-    bool sendBuffered();
+  void add_to_send_buffer(const std::string &type, const std::string &message);
+  bool sendBuffered();
   std::pair<std::string, json> readMessage();
 };

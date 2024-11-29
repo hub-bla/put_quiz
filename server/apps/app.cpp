@@ -100,7 +100,7 @@ void ping(json message, shared_ptr<Client> client) {
   json pongJson;
   pongJson["pong"] = "ping";
 
-  client->add_message_to_send_buffer("pong",pongJson.dump());
+  client->add_message_to_send_buffer("pong", pongJson.dump());
 }
 
 using CallbackType = std::function<void(json, shared_ptr<Client>)>;
@@ -162,7 +162,7 @@ int main() {
       epoll_event client_events;
       cout << "Accepted client: " << client_fd << endl;
       clients[client_fd] = make_shared<Client>(client_fd);
-      client_events.events = EPOLLIN | EPOLLHUP |EPOLLOUT;
+      client_events.events = EPOLLIN | EPOLLHUP | EPOLLOUT;
       client_events.data.fd = client_fd;
       epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &client_events);
 

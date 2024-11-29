@@ -15,7 +15,8 @@ public:
   virtual ~Client();
 
   std::pair<std::string, json> read_message();
-  void add_message_to_send_buffer(const std::string& type, const std::string& message);
+  void add_message_to_send_buffer(const std::string &type,
+                                  const std::string &message);
   bool send_buffered();
   int get_sock_fd();
   virtual void disconnect(const int &epoll_fd);
