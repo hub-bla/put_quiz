@@ -4,8 +4,8 @@ Player::~Player() {}
 
 Player::Player(int fd, std::function<void(std::string)> disconnect_from_game_fp,
                std::string code)
-    : Client(fd), disconnect_from_game(disconnect_from_game_fp),
-      game_code(code) {}
+    : Client(fd), game_code(code),
+      disconnect_from_game(disconnect_from_game_fp) {}
 
 void Player::disconnect(const int &epoll_fd) {
   disconnect_from_game(game_code);

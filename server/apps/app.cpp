@@ -24,6 +24,13 @@ unordered_map<int, shared_ptr<Client>> clients;
 
 int epoll_fd;
 
+void enable_write(const int& client_fd) {
+    epoll_event client_events{};
+    client_events.data.fd = client_fd;
+    client_events.events = EPOLLIN | EPOLLOUT;
+    epoll_ctl(epoll_fd, EPOLL_CTL_MOD, client_fd, &client_events);
+}
+
 void delete_game(std::string game_code) {
   // function that will be based to the host constructor
   cout << "delete whole game" << endl;
@@ -57,7 +64,7 @@ void create_game(json message, shared_ptr<Client> client) {
   // TODO: check if host already send quiz
 
   std::string game_code = generate_game_code();
-  games[game_code] = make_unique<Game>(game_code);
+  games[game_code] = make_unique<Game>(game_code, client_fd);
   cout << "create game" << endl;
   shared_ptr<Host> host = make_shared<Host>(client_fd, delete_game, game_code);
   clients[client_fd] = static_pointer_cast<Client>(host);
@@ -65,10 +72,8 @@ void create_game(json message, shared_ptr<Client> client) {
 
   json_game_code["gameCode"] = game_code;
 
-  epoll_event client_events{};
-  client_events.data.fd = client_fd;
-  client_events.events = EPOLLIN | EPOLLOUT;
-  epoll_ctl(epoll_fd, EPOLL_CTL_MOD, client_fd, &client_events);
+  enable_write(client_fd);
+
   string test = json_game_code.dump();
   cout << test << endl;
   clients[client_fd]->add_message_to_send_buffer("game_code", test);
@@ -76,10 +81,22 @@ void create_game(json message, shared_ptr<Client> client) {
 
 void join_game(json message, shared_ptr<Client> client) {
   const int &client_fd = client->get_sock_fd();
-  std::string game_code = message["game_code"];
+  std::string game_code = message["gameCode"];
+
   shared_ptr<Player> player =
       make_shared<Player>(client_fd, remove_client_from_game, game_code);
   clients[client_fd] = static_pointer_cast<Client>(player);
+
+  int host_fd = games[game_code]->get_host_desc();
+
+  auto host = clients[host_fd];
+  json user_data{};
+
+  user_data["username"] = message["username"];
+
+  host->add_message_to_send_buffer("new_player", user_data.dump());
+  enable_write(host_fd);
+  cout << "Player: " <<  message["username"] << " joined room " << game_code << endl;
 }
 
 void disconnect(json message, shared_ptr<Client> client) {

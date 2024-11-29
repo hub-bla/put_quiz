@@ -21,24 +21,27 @@ bool MessageHandler::sendBuffered() {
     }
     currently_sending = write_buffer.front();
     write_buffer.pop();
+    // add this point i we had only one message in queue then its empty now
   }
 
   size_t message_length = currently_sending.size();
-
+  std::cout << "Currently sending: " << currently_sending << std::endl;
   const size_t bytes_sent =
       write(client_fd, currently_sending.data(), message_length);
 
   const size_t rest = message_length - bytes_sent;
+
   if (rest) {
     currently_sending = currently_sending.substr(rest + bytes_sent);
     return false;
   }
-
+    currently_sending = "";
   if (!write_buffer.empty()) {
-    currently_sending = write_buffer.front();
-    write_buffer.pop();
+      currently_sending = write_buffer.front();
+      write_buffer.pop();
     return false;
   }
+
   return true;
 }
 
