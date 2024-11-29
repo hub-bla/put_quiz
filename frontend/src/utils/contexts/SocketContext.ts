@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from "react"
+import { createContext, useContext, useEffect, useState } from "react"
 import { stringToUint8 } from "../functions"
 import useWebSocket, { ReadyState, SendMessage } from "react-use-websocket"
 import { SERVER_URL } from "../constants"
@@ -10,7 +10,13 @@ interface ISocketContext {
 	) => Uint8Array
 	sendMessage: SendMessage
 	readyState: ReadyState
-	lastMessage: MessageEvent<any> | null
+	lastMessage: MessageEvent | null
+	newMessage: {
+		type:string
+		data: {
+			gameCode:string
+		}
+	}
 }
 
 export const SocketContext = createContext<ISocketContext | null>(null)
@@ -27,11 +33,24 @@ export const useSocketContext = () => {
 	return context
 }
 
+
+const HEADER_SIZE=100
 export const useSockContextValues = () => {
-	const [socketUrl, setSocketUrl] = useState(SERVER_URL)
+	const [readBuffer, setReadBuffer] = useState("")
+	const [newMessage, setNewMessage] = useState({
+		type: "",
+		data: {}
+	})
+	const [currentlyReadMess, setCurrentlyReadMess] = useState({
+		messageHeader: "",
+		readHeader: HEADER_SIZE,
+		messageType: "",
+		messageSize: 0,
+		message: ""
+	})
 	// const [messageHistory, setMessageHistory] = useState([])
 
-	const { sendMessage, lastMessage, readyState } = useWebSocket(socketUrl)
+	const { sendMessage, lastMessage, readyState } = useWebSocket(SERVER_URL)
 
 	const preprocessMessage = <MessageObj extends object>(
 		type: string,
@@ -50,5 +69,86 @@ export const useSockContextValues = () => {
 		return combined
 	}
 
-	return { preprocessMessage, sendMessage, readyState, lastMessage }
+
+	useEffect(() => {
+		if (lastMessage !== null) {
+			lastMessage.data.text().then((text: string) => {
+			setReadBuffer(prevReadBuffer => (prevReadBuffer+text))
+			})
+		}
+	}, [lastMessage])
+
+
+	useEffect(() => {
+		if (readBuffer.length != 0) {
+			let {readHeader, messageHeader, messageSize, message, messageType} = currentlyReadMess
+			const bytesToRead = readHeader > 0 ? readHeader-messageHeader.length : messageSize - message.length
+			
+			const bytesAvailableToRead = Math.min(bytesToRead, readBuffer.length)
+			const readStr = readBuffer.slice(0, bytesAvailableToRead)
+			
+			// remember to remove thign that were read 
+	
+			if (readHeader > 0) {
+				messageHeader += readStr
+				readHeader -= bytesAvailableToRead
+			}
+	
+			if (readHeader == 0) {
+				if (messageSize == 0) {
+					const [type, size] = messageHeader.split("\n\n")
+	
+					messageSize = Number(size)
+					messageType = type
+				} else {
+					message += readStr
+				}
+			}
+	
+			if (messageSize != 0 && messageSize == message.length) {
+				const parsedData = JSON.parse(message)
+				console.log("readmessage", message, messageSize, message.length)
+				setNewMessage({
+					type: messageType,
+					data: parsedData
+				})
+	
+				setCurrentlyReadMess({
+					messageHeader: "",
+					readHeader: HEADER_SIZE,
+					messageType: "",
+					messageSize: 0,
+					message: ""
+				})
+				setReadBuffer(prevReadBuffer => prevReadBuffer.slice(bytesAvailableToRead, prevReadBuffer.length))
+				console.log("cleaned")
+				return
+			}
+	
+
+			console.log({
+				messageHeader,
+				readHeader,
+				messageType,
+				messageSize,
+				message
+			})
+			// console.log("message", messageHeader)
+			console.log("readbuffer", readBuffer)
+	
+			setCurrentlyReadMess({
+				messageHeader,
+				readHeader,
+				messageType,
+				messageSize,
+				message
+			})
+
+			setReadBuffer(prevReadBuffer => prevReadBuffer.slice(bytesAvailableToRead, prevReadBuffer.length))
+		}
+		
+
+	}, [readBuffer,currentlyReadMess])
+
+	return { preprocessMessage, sendMessage, readyState, lastMessage, newMessage }
 }

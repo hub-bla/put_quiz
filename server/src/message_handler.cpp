@@ -1,8 +1,16 @@
 #include "server/message_handler.hpp"
 #include <iostream>
+
+std::string preprocess_message(std::string message_type, std::string message) {
+    std::string header = message_type + std::string("\n\n") +
+                         std::string(std::to_string(message.size())) + std::string("\n\n");
+    header += std::string(HEADER_SIZE - header.size(), ' ');
+
+    return header+message;
+}
+
 MessageHandler::MessageHandler(int fd) : client_fd(fd) {
-  write_buffer.push("First string");
-  write_buffer.push("Second string");
+
 }
 
 MessageHandler::~MessageHandler() {}
@@ -135,6 +143,7 @@ std::pair<std::string, json> MessageHandler::readMessage() {
   return {"", nullptr};
 }
 
-void MessageHandler::add_to_send_buffer(std::string message) {
-  write_buffer.push(message);
+void MessageHandler::add_to_send_buffer(const std::string& type, const std::string& message) {
+
+  write_buffer.push(preprocess_message(type, message));
 }

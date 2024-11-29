@@ -71,7 +71,7 @@ void create_game(json message, shared_ptr<Client> client) {
   epoll_ctl(epoll_fd, EPOLL_CTL_MOD, client_fd, &client_events);
   string test = json_game_code.dump();
   cout << test << endl;
-  clients[client_fd]->add_message_to_send_buffer(test);
+  clients[client_fd]->add_message_to_send_buffer("game_code", test);
 }
 
 void join_game(json message, shared_ptr<Client> client) {
@@ -97,8 +97,10 @@ void ping(json message, shared_ptr<Client> client) {
   std::cout << "Message from client: " << message << std::endl;
   client_events.events = EPOLLIN | EPOLLOUT;
   epoll_ctl(epoll_fd, EPOLL_CTL_MOD, client_fd, &client_events);
+  json pongJson;
+  pongJson["pong"] = "ping";
 
-  client->add_message_to_send_buffer("pong");
+  client->add_message_to_send_buffer("pong",pongJson.dump());
 }
 
 using CallbackType = std::function<void(json, shared_ptr<Client>)>;
@@ -160,7 +162,7 @@ int main() {
       epoll_event client_events;
       cout << "Accepted client: " << client_fd << endl;
       clients[client_fd] = make_shared<Client>(client_fd);
-      client_events.events = EPOLLIN | EPOLLHUP;
+      client_events.events = EPOLLIN | EPOLLHUP |EPOLLOUT;
       client_events.data.fd = client_fd;
       epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &client_events);
 
