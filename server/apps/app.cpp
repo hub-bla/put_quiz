@@ -24,11 +24,11 @@ unordered_map<int, shared_ptr<Client>> clients;
 
 int epoll_fd;
 
-void enable_write(const int& client_fd) {
-    epoll_event client_events{};
-    client_events.data.fd = client_fd;
-    client_events.events = EPOLLIN | EPOLLOUT;
-    epoll_ctl(epoll_fd, EPOLL_CTL_MOD, client_fd, &client_events);
+void enable_write(const int &client_fd) {
+  epoll_event client_events{};
+  client_events.data.fd = client_fd;
+  client_events.events = EPOLLIN | EPOLLOUT;
+  epoll_ctl(epoll_fd, EPOLL_CTL_MOD, client_fd, &client_events);
 }
 
 void delete_game(std::string game_code) {
@@ -72,14 +72,16 @@ void create_game(json message, shared_ptr<Client> client) {
   json_game_code["gameCode"] = game_code;
 
   enable_write(client_fd);
-  clients[client_fd]->add_message_to_send_buffer("game_code", json_game_code.dump());
+  clients[client_fd]->add_message_to_send_buffer("game_code",
+                                                 json_game_code.dump());
   cout << "Create game: " << game_code << endl;
 }
 
 void join_game(json message, shared_ptr<Client> client) {
   const int &client_fd = client->get_sock_fd();
   std::string game_code = message["gameCode"];
-  // TODO: validate if the game code actually exists and if the username does not exists in the room
+  // TODO: validate if the game code actually exists and if the username does
+  // not exists in the room
   shared_ptr<Player> player =
       make_shared<Player>(client_fd, remove_client_from_game, game_code);
   clients[client_fd] = static_pointer_cast<Client>(player);
@@ -92,7 +94,8 @@ void join_game(json message, shared_ptr<Client> client) {
 
   host->add_message_to_send_buffer("new_player", user_data.dump());
   enable_write(host_fd);
-  cout << "Player: " <<  message["username"] << " joined room " << game_code << endl;
+  cout << "Player: " << message["username"] << " joined room " << game_code
+       << endl;
 }
 
 void disconnect(json message, shared_ptr<Client> client) {

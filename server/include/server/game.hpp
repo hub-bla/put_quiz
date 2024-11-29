@@ -6,12 +6,12 @@
 
 class Game {
 private:
-    int host_desc;
+  int host_desc;
 
 public:
   std::string game_code;
   std::unordered_map<std::string, int> user_answers;
-  std::vector<std::shared_ptr<Client>> clients;
+  std::unordered_map<std::string, std::shared_ptr<Client>> players;
 
   Game(std::string code, int host_desc);
 

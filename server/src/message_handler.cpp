@@ -35,10 +35,10 @@ bool MessageHandler::sendBuffered() {
     currently_sending = currently_sending.substr(rest + bytes_sent);
     return false;
   }
-    currently_sending = "";
+  currently_sending = "";
   if (!write_buffer.empty()) {
-      currently_sending = write_buffer.front();
-      write_buffer.pop();
+    currently_sending = write_buffer.front();
+    write_buffer.pop();
     return false;
   }
 
