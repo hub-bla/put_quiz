@@ -2,6 +2,7 @@
 #include <queue>
 #include <string>
 #include <unistd.h>
+#define HEADER_SIZE 100
 using json = nlohmann::json;
 
 class MessageHandler {
@@ -21,7 +22,7 @@ public:
   MessageHandler(int fd);
   ~MessageHandler();
 
-  void add_to_send_buffer(std::string message);
+  void add_to_send_buffer(const std::string &type, const std::string &message);
   bool sendBuffered();
   std::pair<std::string, json> readMessage();
 };

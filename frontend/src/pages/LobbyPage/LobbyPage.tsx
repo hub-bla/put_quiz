@@ -1,12 +1,13 @@
 import { useSocketContext } from "@/utils"
 import "./LobbyPage.css"
 import { useEffect, useState } from "react"
-const playersData = ["nick1", "nick2", "nick3"]
+const mockPlayersData = ["nick1", "nick2", "nick3"]
 
 export const LobbyPage: React.FC = () => {
 	const [gameCode, setGameCode] = useState("")
+	const [playersData, setPlayersdata] = useState(mockPlayersData)
 
-	const { lastMessage } = useSocketContext()
+	const { newMessage } = useSocketContext()
 
 	const players = playersData.map((player) => {
 		return (
@@ -17,18 +18,17 @@ export const LobbyPage: React.FC = () => {
 	})
 
 	useEffect(() => {
-		if (lastMessage !== null) {
-			lastMessage.data.text().then((text: string) => {
-				const message = JSON.parse(text)
-				if (message?.gameCode) {
-					setGameCode(message.gameCode)
-				}
-			})
-
-			// console.log(message)
-			// setGameCode(message?.gameCode)
+		const {type, data} = newMessage
+		
+		if (type.length != 0) {
+			if (type === "game_code") {
+				setGameCode(data["gameCode"])
+			} else if (type == "new_player") {
+				console.log("Add new player here")
+			}
 		}
-	}, [lastMessage])
+			console.log("fromLobby",newMessage)
+	}, [newMessage])
 
 	return (
 		<div>
