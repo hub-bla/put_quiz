@@ -7,8 +7,8 @@ interface QuizPreviewProps {
 }
 
 export const QuizPreview: React.FC<QuizPreviewProps> = ({ quiz }) => {
-	const questionsPreview = quiz.questions.map((question: Question) => {
-		return <QuestionPreview question={question} />
+	const questionsPreview = quiz.questions.map((question: Question, idx) => {
+		return <QuestionPreview key={idx} question={question} />
 	})
 	return <div className='questions'>{questionsPreview}</div>
 }

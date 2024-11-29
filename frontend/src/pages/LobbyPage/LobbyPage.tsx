@@ -1,11 +1,10 @@
 import { useSocketContext } from "@/utils"
 import "./LobbyPage.css"
 import { useEffect, useState } from "react"
-const mockPlayersData = ["nick1", "nick2", "nick3"]
 
 export const LobbyPage: React.FC = () => {
 	const [gameCode, setGameCode] = useState("")
-	const [playersData, setPlayersdata] = useState(mockPlayersData)
+	const [playersData, setPlayersdata] = useState<string[]>([])
 
 	const { newMessage } = useSocketContext()
 
@@ -24,7 +23,7 @@ export const LobbyPage: React.FC = () => {
 			if (type === "game_code") {
 				setGameCode(data["gameCode"])
 			} else if (type == "new_player") {
-				console.log("Add new player here")
+				setPlayersdata(prevPlayersData => [...prevPlayersData, data['username']])
 			}
 		}
 			console.log("fromLobby",newMessage)
@@ -36,6 +35,7 @@ export const LobbyPage: React.FC = () => {
 				<h1>GAME CODE: {gameCode}</h1>
 				<button>Start game</button>
 			</div>
+			{playersData.length == 0 && <div>Waiting for players to join ...</div>}
 			<div className='players'>{players}</div>
 		</div>
 	)

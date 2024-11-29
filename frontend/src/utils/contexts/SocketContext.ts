@@ -57,6 +57,7 @@ export const useSockContextValues = () => {
 		message: MessageObj
 	) => {
 		const jsonStr = JSON.stringify(message)
+		console.log(jsonStr)
 		const headerStr = `${type}\n\n${jsonStr.length}\n\n`
 
 		const headerUint8 = stringToUint8(headerStr, 100)
@@ -73,6 +74,7 @@ export const useSockContextValues = () => {
 	useEffect(() => {
 		if (lastMessage !== null) {
 			lastMessage.data.text().then((text: string) => {
+				console.log("lastMEssage", text)
 			setReadBuffer(prevReadBuffer => (prevReadBuffer+text))
 			})
 		}
@@ -80,6 +82,7 @@ export const useSockContextValues = () => {
 
 
 	useEffect(() => {
+		console.log("READ BUFFER", readBuffer)
 		if (readBuffer.length != 0) {
 			let {readHeader, messageHeader, messageSize, message, messageType} = currentlyReadMess
 			const bytesToRead = readHeader > 0 ? readHeader-messageHeader.length : messageSize - message.length

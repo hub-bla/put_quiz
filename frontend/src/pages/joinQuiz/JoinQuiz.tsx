@@ -1,27 +1,37 @@
 import { useState } from "react"
 import "./joinQuiz.css"
+import { PLAY_ROUTE, useSocketContext } from "@/utils"
+import { useNavigate } from "react-router-dom"
 
 export const JoinQuiz: React.FC = () => {
 	const [formData, setFromData] = useState({
 		gameCode: "",
 		username: "",
 	})
+	const { preprocessMessage, sendMessage } = useSocketContext()
+	const navigate = useNavigate()
+
 
 	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { id, value } = e.target
 
 		setFromData((prevFormData) => ({ 
 			...prevFormData,
-			[id]: id === "gameCode" ? value.toLowerCase() : value
+			[id]: id === "gameCode" ? value.toUpperCase() : value
 		}))
 	}
 
 	const handleSubmit = () => {
-		console.log("submitted")
+		if (formData) {
+			const message = preprocessMessage("join_game", formData)
+			sendMessage(message)
+			console.log("sent")
+			navigate("/" + PLAY_ROUTE)
+		}
 	}
 
 	return (
-		<form className='join-form' onSubmit={handleSubmit}>
+		<div className='join-form'>
 			<input
 				className='form-input'
 				id='gameCode'
@@ -40,7 +50,7 @@ export const JoinQuiz: React.FC = () => {
 				value={formData.username}
 				required
 			/>
-			<button type='submit'>Play</button>
-		</form>
+			<button onClick={handleSubmit}>Play</button>
+		</div>
 	)
 }

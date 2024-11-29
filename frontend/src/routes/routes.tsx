@@ -1,6 +1,6 @@
-import { CreateQuiz, HomePage, JoinQuiz } from "@/pages"
+import { CreateQuiz, HomePage, JoinQuiz, PlayPage } from "@/pages"
 import { LobbyPage } from "@/pages/LobbyPage"
-import { CREATE_QUIZ_ROUTE, HOST_LOBBY_ROUTE, JOIN_QUIZ_ROUTE } from "@/utils"
+import { CREATE_QUIZ_ROUTE, HOST_LOBBY_ROUTE, JOIN_QUIZ_ROUTE, PLAY_ROUTE } from "@/utils"
 import { RouteObject } from "react-router-dom"
 
 export const rootRoutes: RouteObject[] = [
@@ -20,4 +20,8 @@ export const rootRoutes: RouteObject[] = [
 		path: HOST_LOBBY_ROUTE,
 		element: <LobbyPage />,
 	},
+	{
+		path: PLAY_ROUTE,
+		element: <PlayPage />
+	}
 ]

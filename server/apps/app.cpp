@@ -62,36 +62,32 @@ std::string generate_game_code(const int len = 8) {
 void create_game(json message, shared_ptr<Client> client) {
   const int &client_fd = client->get_sock_fd();
   // TODO: check if host already send quiz
-
   std::string game_code = generate_game_code();
   games[game_code] = make_unique<Game>(game_code, client_fd);
-  cout << "create game" << endl;
+
   shared_ptr<Host> host = make_shared<Host>(client_fd, delete_game, game_code);
   clients[client_fd] = static_pointer_cast<Client>(host);
-  json json_game_code;
 
+  json json_game_code;
   json_game_code["gameCode"] = game_code;
 
   enable_write(client_fd);
-
-  string test = json_game_code.dump();
-  cout << test << endl;
-  clients[client_fd]->add_message_to_send_buffer("game_code", test);
+  clients[client_fd]->add_message_to_send_buffer("game_code", json_game_code.dump());
+  cout << "Create game: " << game_code << endl;
 }
 
 void join_game(json message, shared_ptr<Client> client) {
   const int &client_fd = client->get_sock_fd();
   std::string game_code = message["gameCode"];
-
+  // TODO: validate if the game code actually exists and if the username does not exists in the room
   shared_ptr<Player> player =
       make_shared<Player>(client_fd, remove_client_from_game, game_code);
   clients[client_fd] = static_pointer_cast<Client>(player);
 
   int host_fd = games[game_code]->get_host_desc();
-
   auto host = clients[host_fd];
-  json user_data{};
 
+  json user_data{};
   user_data["username"] = message["username"];
 
   host->add_message_to_send_buffer("new_player", user_data.dump());
@@ -154,9 +150,6 @@ int main() {
     exit(1);
   }
 
-  std::cout << "Binded"
-            << "\n";
-
   /* specify queue size */
   if (listen(server_fd, QUEUE_SIZE) < 0) {
     fprintf(stderr, "Can't set queue size.\n");
@@ -167,9 +160,6 @@ int main() {
   ee.data.fd = server_fd;
 
   epoll_ctl(epoll_fd, EPOLL_CTL_ADD, server_fd, &ee);
-
-  // just for checking the build
-  //  return 0;
 
   while (1) {
 
