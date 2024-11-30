@@ -1,12 +1,19 @@
 import { useSocketContext } from "@/utils"
 import "./LobbyPage.css"
-import { useEffect, useState } from "react"
+import {  useEffect, useState } from "react"
+import {  useBlocker, useNavigate } from "react-router-dom"
+
 
 export const LobbyPage: React.FC = () => {
 	const [gameCode, setGameCode] = useState("")
 	const [playersData, setPlayersdata] = useState<string[]>([])
-
-	const { newMessage } = useSocketContext()
+	const navigate = useNavigate()
+	const blocker = useBlocker(
+		() =>
+			gameCode !== ""
+		);
+	
+	const { newMessage, checkSocket, readyState} = useSocketContext()
 
 	const players = playersData.map((player) => {
 		return (
@@ -28,6 +35,35 @@ export const LobbyPage: React.FC = () => {
 		}
 			console.log("fromLobby",newMessage)
 	}, [newMessage])
+
+	
+	
+	useEffect(() => {
+		const handleBeforeUnload = (event) => {
+			if (gameCode !== "") {
+			  event.preventDefault();
+			  event.returnValue = ""; // This triggers the browser's confirmation dialog.
+			  window.location.href = "/";
+			}
+		  };
+
+		window.addEventListener("beforeunload", handleBeforeUnload);
+	
+		return () => {
+		  window.removeEventListener("beforeunload", handleBeforeUnload);
+		};
+	  }, [gameCode]);
+
+	  useEffect(() => {
+		checkSocket(navigate)
+	  }, [readyState])
+
+	  useEffect(() => {
+		if (blocker.state === "blocked") {
+		const beforeUnloadEvent = new Event('beforeunload');
+		window.dispatchEvent(beforeUnloadEvent);
+		}
+	  }, [blocker.state])
 
 	return (
 		<div>

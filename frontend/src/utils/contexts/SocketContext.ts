@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from "react"
 import { stringToUint8 } from "../functions"
 import useWebSocket, { ReadyState, SendMessage } from "react-use-websocket"
 import { SERVER_URL } from "../constants"
+import { NavigateFunction } from "react-router"
 
 interface ISocketContext {
 	preprocessMessage: <MessageObj extends object>(
@@ -17,6 +18,7 @@ interface ISocketContext {
 			gameCode:string
 		}
 	}
+	checkSocket: (navigate: NavigateFunction) => void
 }
 
 export const SocketContext = createContext<ISocketContext | null>(null)
@@ -48,7 +50,7 @@ export const useSockContextValues = () => {
 		messageSize: 0,
 		message: ""
 	})
-	// const [messageHistory, setMessageHistory] = useState([])
+	
 
 	const { sendMessage, lastMessage, readyState } = useWebSocket(SERVER_URL)
 
@@ -150,8 +152,15 @@ export const useSockContextValues = () => {
 			setReadBuffer(prevReadBuffer => prevReadBuffer.slice(bytesAvailableToRead, prevReadBuffer.length))
 		}
 		
-
 	}, [readBuffer,currentlyReadMess])
 
-	return { preprocessMessage, sendMessage, readyState, lastMessage, newMessage }
+
+
+	const checkSocket = (navigate:NavigateFunction) => {
+		if (ReadyState.OPEN !== readyState) {
+			navigate("/")
+		}
+	}
+
+	return { preprocessMessage, sendMessage, readyState, lastMessage, newMessage, checkSocket }
 }

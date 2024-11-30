@@ -6,9 +6,8 @@
 
 class Game {
 private:
-  int host_desc;
-
 public:
+  int host_desc;
   std::string game_code;
   std::unordered_map<std::string, int> user_answers;
   std::unordered_map<std::string, std::shared_ptr<Client>> players;
