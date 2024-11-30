@@ -31,14 +31,24 @@ void enable_write(const int &client_fd) {
   epoll_ctl(epoll_fd, EPOLL_CTL_MOD, client_fd, &client_events);
 }
 
-void delete_game(std::string game_code) {
+void delete_game(const std::string &game_code) {
   // function that will be based to the host constructor
   cout << "delete whole game" << endl;
+  const auto &game = games[game_code];
+  const auto players = game->players;
+
+  for (const auto &player : players) {
+    player.second->disconnect(epoll_fd);
+  }
+
   games.erase(game_code);
 }
 
-void remove_client_from_game(std::string game_code) {
-  cout << "remove client from game" << endl;
+void remove_client_from_game(const std::string &game_code,
+                             const std::string &username) {
+  cout << "Remove " << username << " from " << game_code << endl;
+  const auto &game = games[game_code];
+  game->players.erase(username);
 }
 
 std::string generate_game_code(const int len = 8) {
@@ -65,8 +75,12 @@ void create_game(json message, shared_ptr<Client> client) {
   std::string game_code = generate_game_code();
   games[game_code] = make_unique<Game>(game_code, client_fd);
 
+  const auto &game = games[game_code];
+
   shared_ptr<Host> host = make_shared<Host>(client_fd, delete_game, game_code);
   clients[client_fd] = static_pointer_cast<Client>(host);
+
+  game->host_desc = client_fd;
 
   json json_game_code;
   json_game_code["gameCode"] = game_code;
@@ -80,11 +94,28 @@ void create_game(json message, shared_ptr<Client> client) {
 void join_game(json message, shared_ptr<Client> client) {
   const int &client_fd = client->get_sock_fd();
   std::string game_code = message["gameCode"];
+  std::string username = message["username"];
   // TODO: validate if the game code actually exists and if the username does
   // not exists in the room
-  shared_ptr<Player> player =
-      make_shared<Player>(client_fd, remove_client_from_game, game_code);
+
+  if (games.find(game_code) == games.end()) {
+    // TODO: SEND TO THE CLIENT THAT HE PASSED WRONG CODE
+    return;
+  }
+
+  const auto &game = games[game_code];
+
+  if (game->players.find(username) != game->players.end()) {
+    // TODO: SEND TO THE CLIENT THAT USERNAME IS ALREADY TAKEN
+    return;
+  }
+
+  shared_ptr<Player> player = make_shared<Player>(
+      client_fd, remove_client_from_game, game_code, username);
   clients[client_fd] = static_pointer_cast<Client>(player);
+
+  cout << "Add " << username << " to " << game_code << endl;
+  game->players[username] = clients[client_fd];
 
   int host_fd = games[game_code]->get_host_desc();
   auto host = clients[host_fd];
@@ -98,17 +129,16 @@ void join_game(json message, shared_ptr<Client> client) {
        << endl;
 }
 
-void disconnect(json message, shared_ptr<Client> client) {
+void disconnect(const json &message, shared_ptr<Client> client) {
   const int &client_fd = client->get_sock_fd();
-  cout << "Client: " << client_fd << " disconnected" << endl;
   client->disconnect(epoll_fd); // removes from epoll and closes socket
   clients.erase(client_fd);
   cout << "Client: " << client_fd << " disconnected" << endl;
 }
 
-void ping(json message, shared_ptr<Client> client) {
+void ping(const json &message, shared_ptr<Client> client) {
   const int &client_fd = client->get_sock_fd();
-  epoll_event client_events;
+  epoll_event client_events{};
   client_events.data.fd = client_fd;
   std::cout << "Message from client: " << message << std::endl;
   client_events.events = EPOLLIN | EPOLLOUT;
@@ -119,7 +149,7 @@ void ping(json message, shared_ptr<Client> client) {
   client->add_message_to_send_buffer("pong", pongJson.dump());
 }
 
-using CallbackType = std::function<void(json, shared_ptr<Client>)>;
+using CallbackType = std::function<void(const json &, shared_ptr<Client>)>;
 
 unordered_map<std::string, CallbackType> callbacks{{"DISCONNECT", disconnect},
                                                    {"ping", ping},
@@ -133,18 +163,19 @@ int main() {
 
   int server_fd;
   epoll_fd = epoll_create1(0);
-  epoll_event ee;
+  epoll_event ee{};
 
   server_fd = socket(PF_INET, SOCK_STREAM, 0);
   int nFoo = 1;
   setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, (char *)&nFoo, sizeof(nFoo));
-  struct sockaddr_in stAddr, stClientAddr;
+  sockaddr_in stAddr{};
 
   /* address structure */
   memset(&stAddr, 0, sizeof(struct sockaddr));
   stAddr.sin_family = AF_INET;
   stAddr.sin_addr.s_addr = htonl(INADDR_ANY);
   stAddr.sin_port = htons(SERVER_PORT);
+
   /* bind a name to a socket */
   auto nBind =
       bind(server_fd, (struct sockaddr *)&stAddr, sizeof(struct sockaddr));
@@ -165,29 +196,26 @@ int main() {
   epoll_ctl(epoll_fd, EPOLL_CTL_ADD, server_fd, &ee);
 
   while (1) {
-
     epoll_wait(epoll_fd, &ee, 1, -1);
     if (ee.data.fd == server_fd) {
       int client_fd = accept(server_fd, nullptr, nullptr);
-      epoll_event client_events;
-      cout << "Accepted client: " << client_fd << endl;
+
+      epoll_event client_events{};
       clients[client_fd] = make_shared<Client>(client_fd);
       client_events.events = EPOLLIN | EPOLLHUP | EPOLLOUT;
       client_events.data.fd = client_fd;
       epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &client_events);
 
+      cout << "Accepted client: " << client_fd << endl;
     } else {
       const auto client_fd = ee.data.fd;
-
       const auto &client = clients[client_fd];
 
       if (ee.events & EPOLLIN) {
-
         // set EPOLLOUT if needed to send a response
         const auto [type, message] = client->read_message();
 
         if (!type.empty()) {
-
           // now here we can do something like callbacks[type](message, client)
           // code becomes more modular
           callbacks[type](message, client);
@@ -199,7 +227,7 @@ int main() {
 
         if (done) {
           cout << "Message was sent" << endl;
-          epoll_event client_events;
+          epoll_event client_events{};
           client_events.data.fd = client_fd;
           client_events.events = EPOLLIN | EPOLLHUP;
           epoll_ctl(epoll_fd, EPOLL_CTL_MOD, client_fd, &client_events);
