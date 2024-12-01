@@ -1,7 +1,7 @@
 #include "server/question.hpp"
 
 
-Question::Question(json question){
+explicit Question::Question(json question){
     this->question = question;
     correct_answer_Idx = question["correctAnswerIdx"].get<int>();
     this->question.erase("correctAnswerIdx");
@@ -9,8 +9,10 @@ Question::Question(json question){
 
 
 bool Question::validate_answer(json answer){
-    //TODO based on answer structure check correctess
-
+    if(answer["answerIdx"].get<int>() == correct_answer_Idx){
+        return true;
+    }
+    return false;
 };
 
 Question::~Question(){};

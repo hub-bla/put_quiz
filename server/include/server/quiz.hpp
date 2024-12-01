@@ -9,7 +9,6 @@ using json = nlohmann::json;
 class Quiz{
     std::queue<Question> questions; //only sequentional access 
     std::unique_ptr<Question> current_question;
-    bool finished;
     int count;
 
 public:
