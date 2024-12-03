@@ -13,9 +13,9 @@ interface ISocketContext {
 	readyState: ReadyState
 	lastMessage: MessageEvent | null
 	newMessage: {
-		type:string
+		type: string
 		data: {
-			gameCode:string
+			gameCode: string
 		}
 	}
 	checkSocket: (navigate: NavigateFunction) => void
@@ -35,22 +35,20 @@ export const useSocketContext = () => {
 	return context
 }
 
-
-const HEADER_SIZE=100
+const HEADER_SIZE = 100
 export const useSockContextValues = () => {
 	const [readBuffer, setReadBuffer] = useState("")
 	const [newMessage, setNewMessage] = useState({
 		type: "",
-		data: {}
+		data: {},
 	})
 	const [currentlyReadMess, setCurrentlyReadMess] = useState({
 		messageHeader: "",
 		readHeader: HEADER_SIZE,
 		messageType: "",
 		messageSize: 0,
-		message: ""
+		message: "",
 	})
-	
 
 	const { sendMessage, lastMessage, readyState } = useWebSocket(SERVER_URL)
 
@@ -60,7 +58,7 @@ export const useSockContextValues = () => {
 	) => {
 		const jsonStr = JSON.stringify(message)
 		console.log(jsonStr)
-		const headerStr = `${type}\n\n${jsonStr.length}\n\n`
+		const headerStr = `${type}\n${jsonStr.length}\n`
 
 		const headerUint8 = stringToUint8(headerStr, 100)
 
@@ -72,95 +70,104 @@ export const useSockContextValues = () => {
 		return combined
 	}
 
-
 	useEffect(() => {
 		if (lastMessage !== null) {
 			lastMessage.data.text().then((text: string) => {
 				console.log("lastMEssage", text)
-			setReadBuffer(prevReadBuffer => (prevReadBuffer+text))
+				setReadBuffer((prevReadBuffer) => prevReadBuffer + text)
 			})
 		}
 	}, [lastMessage])
 
-
 	useEffect(() => {
 		console.log("READ BUFFER", readBuffer)
 		if (readBuffer.length != 0) {
-			let {readHeader, messageHeader, messageSize, message, messageType} = currentlyReadMess
-			const bytesToRead = readHeader > 0 ? readHeader-messageHeader.length : messageSize - message.length
-			
+			let { readHeader, messageHeader, messageSize, message, messageType } =
+				currentlyReadMess
+			const bytesToRead =
+				readHeader > 0
+					? readHeader - messageHeader.length
+					: messageSize - message.length
+
 			const bytesAvailableToRead = Math.min(bytesToRead, readBuffer.length)
 			const readStr = readBuffer.slice(0, bytesAvailableToRead)
-			
-			// remember to remove thign that were read 
-	
+
+			// remember to remove thign that were read
+
 			if (readHeader > 0) {
 				messageHeader += readStr
 				readHeader -= bytesAvailableToRead
 			}
-	
+
 			if (readHeader == 0) {
 				if (messageSize == 0) {
-					const [type, size] = messageHeader.split("\n\n")
-	
+					const [type, size] = messageHeader.split("\n")
+
 					messageSize = Number(size)
 					messageType = type
 				} else {
 					message += readStr
 				}
 			}
-	
+
 			if (messageSize != 0 && messageSize == message.length) {
 				const parsedData = JSON.parse(message)
 				console.log("readmessage", message, messageSize, message.length)
 				setNewMessage({
 					type: messageType,
-					data: parsedData
+					data: parsedData,
 				})
-	
+
 				setCurrentlyReadMess({
 					messageHeader: "",
 					readHeader: HEADER_SIZE,
 					messageType: "",
 					messageSize: 0,
-					message: ""
+					message: "",
 				})
-				setReadBuffer(prevReadBuffer => prevReadBuffer.slice(bytesAvailableToRead, prevReadBuffer.length))
+				setReadBuffer((prevReadBuffer) =>
+					prevReadBuffer.slice(bytesAvailableToRead, prevReadBuffer.length)
+				)
 				console.log("cleaned")
 				return
 			}
-	
 
 			console.log({
 				messageHeader,
 				readHeader,
 				messageType,
 				messageSize,
-				message
+				message,
 			})
 			// console.log("message", messageHeader)
 			console.log("readbuffer", readBuffer)
-	
+
 			setCurrentlyReadMess({
 				messageHeader,
 				readHeader,
 				messageType,
 				messageSize,
-				message
+				message,
 			})
 
-			setReadBuffer(prevReadBuffer => prevReadBuffer.slice(bytesAvailableToRead, prevReadBuffer.length))
+			setReadBuffer((prevReadBuffer) =>
+				prevReadBuffer.slice(bytesAvailableToRead, prevReadBuffer.length)
+			)
 		}
-		
-	}, [readBuffer,currentlyReadMess])
+	}, [readBuffer, currentlyReadMess])
 
-
-
-	const checkSocket = (navigate:NavigateFunction) => {
+	const checkSocket = (navigate: NavigateFunction) => {
 		if (ReadyState.OPEN !== readyState) {
 			navigate("/")
 		}
 	}
 
-	return { preprocessMessage, sendMessage, readyState, lastMessage, newMessage, checkSocket }
+	return {
+		preprocessMessage,
+		sendMessage,
+		readyState,
+		lastMessage,
+		newMessage,
+		checkSocket,
+	}
 }
