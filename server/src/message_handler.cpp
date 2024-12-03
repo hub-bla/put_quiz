@@ -2,9 +2,9 @@
 #include <iostream>
 
 std::string preprocess_message(std::string message_type, std::string message) {
-  std::string header = message_type + std::string("\n\n") +
+  std::string header = message_type + std::string("\n") +
                        std::string(std::to_string(message.size())) +
-                       std::string("\n\n");
+                       std::string("\n");
   header += std::string(HEADER_SIZE - header.size(), ' ');
 
   return header + message;
@@ -69,6 +69,7 @@ std::pair<std::string, json> MessageHandler::readMessage() {
   std::cout << "read header: " << read_header << std::endl;
   std::cout << currently_read << std::endl;
   std::cout << readBuffer.size() << std::endl;
+
   if (read_header < 0) {
     // no we have full header
     const auto surplus = (message_header.size() - message_header_size);
@@ -83,47 +84,13 @@ std::pair<std::string, json> MessageHandler::readMessage() {
   if (read_header == 0) {
     if (read_message_size == 0) {
       // first 20 char are the type
-      int count = 0;
-      int idx = 0;
-      while (true) {
-        if (message_header[idx] == '\n') {
-          count += 1;
-          if (count == 2) {
-            break;
-          }
+      std::vector<std::string> header_part = split(message_header, '\n');
 
-          idx++;
-          continue;
-        }
-        read_message_type += message_header[idx];
-
-        count = 0;
-        idx++;
-      }
-
-      // now for message size
-      count = 0;
-      idx++;
-
-      int message_size_start_idx = idx;
-      while (true) {
-        if (message_header[idx] == '\n') {
-          count += 1;
-          if (count == 2) {
-            break;
-          }
-          idx++;
-          continue;
-        }
-        count = 0;
-        idx++;
-      }
+      read_message_type = header_part[0];
 
       // it's minus currently read size because it might be extened by surplused
       // amount
-      read_message_size =
-          std::stoi(message_header.substr(message_size_start_idx, idx - 2)) -
-          currently_read.size();
+      read_message_size = std::stoi(header_part[1]);
     } else {
       currently_read.append(readBuffer.begin(), readBuffer.end());
     }
@@ -147,6 +114,5 @@ std::pair<std::string, json> MessageHandler::readMessage() {
 
 void MessageHandler::add_to_send_buffer(const std::string &type,
                                         const std::string &message) {
-
   write_buffer.push(preprocess_message(type, message));
 }
