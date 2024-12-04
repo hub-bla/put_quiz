@@ -12,8 +12,6 @@ std::string preprocess_message(std::string message_type, std::string message) {
 
 MessageHandler::MessageHandler(int fd) : client_fd(fd) {}
 
-MessageHandler::~MessageHandler() {}
-
 bool MessageHandler::sendBuffered() {
   if (currently_sending.empty()) {
     if (write_buffer.empty()) {

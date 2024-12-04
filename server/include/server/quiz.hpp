@@ -8,7 +8,7 @@ using json = nlohmann::json;
 
 class Quiz {
 private:
-  std::queue<Question> questions; // only sequentional access
+  std::queue<Question> questions; // only sequential access
   Question current_question;
   int number_of_questions;
   int count = 0;
