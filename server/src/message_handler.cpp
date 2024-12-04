@@ -1,4 +1,5 @@
 #include "server/message_handler.hpp"
+#include "spdlog/spdlog.h"
 #include <iostream>
 
 std::string preprocess_message(std::string message_type, std::string message) {
@@ -15,7 +16,7 @@ MessageHandler::MessageHandler(int fd) : client_fd(fd) {}
 bool MessageHandler::sendBuffered() {
   if (currently_sending.empty()) {
     if (write_buffer.empty()) {
-      std::cout << "Write buffer empty for: " << client_fd << std::endl;
+      spdlog::debug("Write buffer empty for: {0}", client_fd);
       return true;
     }
     currently_sending = write_buffer.front();
@@ -24,7 +25,7 @@ bool MessageHandler::sendBuffered() {
   }
 
   size_t message_length = currently_sending.size();
-  std::cout << "Currently sending: " << currently_sending << std::endl;
+
   const size_t bytes_sent =
       write(client_fd, currently_sending.data(), message_length);
 
@@ -50,8 +51,8 @@ std::pair<std::string, json> MessageHandler::readMessage() {
   const int bytes_to_read =
       read_header > 0 ? read_header : read_message_size - currently_read.size();
 
-  std::cout << "MESSAGE HANDLER: bytes to read " << bytes_to_read << " "
-            << currently_read.size() << std::endl;
+  spdlog::debug("MESSAGE HANDLER: bytes to read {0} {1}", bytes_to_read,
+                currently_read.size());
 
   std::vector<char> readBuffer(bytes_to_read);
 
@@ -65,12 +66,9 @@ std::pair<std::string, json> MessageHandler::readMessage() {
     message_header.append(readBuffer.data());
     read_header -= bytes_read;
   }
-  std::cout << "read header: " << read_header << std::endl;
-  std::cout << currently_read << std::endl;
-  std::cout << readBuffer.size() << std::endl;
 
   if (read_header < 0) {
-    // no we have full header
+    // now we have full header
     const auto surplus = (message_header.size() - message_header_size);
     const auto surplus_str = message_header.substr(
         message_header_size, message_header_size + surplus);
@@ -82,13 +80,11 @@ std::pair<std::string, json> MessageHandler::readMessage() {
 
   if (read_header == 0) {
     if (read_message_size == 0) {
-      // first 20 char are the type
       std::vector<std::string> header_part = split(message_header, '\n');
-
+      if (header_part.size() < 2) {
+        spdlog::error("Header is not properly formatted");
+      }
       read_message_type = header_part[0];
-
-      // it's minus currently read size because it might be extened by surplused
-      // amount
       read_message_size = std::stoi(header_part[1]);
     } else {
       currently_read.append(readBuffer.begin(), readBuffer.end());
@@ -105,7 +101,7 @@ std::pair<std::string, json> MessageHandler::readMessage() {
     message_header = "";
     read_header = 100;
     read_message_size = 0;
-    std::cout << "Cleaned" << std::endl;
+    spdlog::debug("Currently read for desc [{0}]", client_fd);
     return {message_type, json_message};
   }
 
@@ -114,8 +110,5 @@ std::pair<std::string, json> MessageHandler::readMessage() {
 
 void MessageHandler::add_to_send_buffer(const std::string &type,
                                         const std::string &message) {
-  std::cout << "Added " << type << " " << message << "to client " << client_fd
-            << std::endl;
   write_buffer.push(preprocess_message(type, message));
-  std::cout << "Buffer size: " << write_buffer.size() << std::endl;
 }
