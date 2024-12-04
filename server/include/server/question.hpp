@@ -10,8 +10,9 @@ class Question {
   int correct_answer_Idx;
 
 public:
-  explicit Question(json question);
+  Question() = default;
+  Question(json question);
   ~Question();
   json get_question();
-  bool validate_answer(json answer);
+  bool validate_answer(const json &answer) const;
 };

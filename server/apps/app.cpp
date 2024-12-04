@@ -24,12 +24,12 @@ unordered_map<int, shared_ptr<Client>> clients;
 
 int epoll_fd;
 
-void enable_write(const int &client_fd);
+void broadcast_standing(const std::unique_ptr<Game> &game);
 
 void delete_game(const std::string &game_code);
 
 void remove_client_from_game(const std::string &game_code,
-                             const std::string &username);
+                             const std::string &username, const int &client_fd);
 
 std::string generate_game_code(const int &len);
 
@@ -48,12 +48,14 @@ void create_game(const CallbackArgs &args);
 void join_game(const CallbackArgs &args);
 void disconnect(const CallbackArgs &args);
 void ping(const CallbackArgs &args);
+void next_question(const CallbackArgs &args);
+void answer(const CallbackArgs &args);
 
 using CallbackType = std::function<void(const CallbackArgs &)>;
-unordered_map<std::string, CallbackType> callbacks{{"DISCONNECT", disconnect},
-                                                   {"ping", ping},
-                                                   {"create_game", create_game},
-                                                   {"join_game", join_game}};
+unordered_map<std::string, CallbackType> callbacks{
+    {"DISCONNECT", disconnect},       {"ping", ping},
+    {"create_game", create_game},     {"join_game", join_game},
+    {"next_question", next_question}, {"answer", answer}};
 
 int main() {
   srand((unsigned)time(NULL) * getpid());
@@ -121,6 +123,7 @@ int main() {
       }
 
       if (ee.events & EPOLLOUT) {
+        std::cout << "EPOLL SEND CLIENT FD: " << client_fd << std::endl;
         bool done = client->send_buffered();
 
         if (done) {
@@ -137,11 +140,17 @@ int main() {
   return 0;
 }
 
-void enable_write(const int &client_fd) {
-  epoll_event client_events{};
-  client_events.data.fd = client_fd;
-  client_events.events = EPOLLIN | EPOLLOUT;
-  epoll_ctl(epoll_fd, EPOLL_CTL_MOD, client_fd, &client_events);
+void broadcast_standing(const std::unique_ptr<Game> &game) {
+  const std::string standingMessage = game->standings.dump();
+
+  for (auto &player : game->players) {
+    player.second->add_message_to_send_buffer("standing", standingMessage);
+    add_write_flag(epoll_fd, player.first);
+  }
+
+  clients[game->host_desc]->add_message_to_send_buffer("standing",
+                                                       standingMessage);
+  add_write_flag(epoll_fd, game->host_desc);
 }
 
 void delete_game(const std::string &game_code) {
@@ -158,10 +167,13 @@ void delete_game(const std::string &game_code) {
 }
 
 void remove_client_from_game(const std::string &game_code,
-                             const std::string &username) {
+                             const std::string &username,
+                             const int &client_fd) {
   cout << "Remove " << username << " from " << game_code << endl;
   const auto &game = games[game_code];
-  game->players.erase(username);
+  game->players.erase(client_fd);
+  game->player_fd_usernames.erase(client_fd);
+  game->usernames.erase(username);
 }
 
 std::string generate_game_code(const int &len) {
@@ -184,9 +196,10 @@ std::string generate_game_code(const int &len) {
 
 void create_game(const CallbackArgs &args) {
   const int &client_fd = args.client->get_sock_fd();
+  const json &message = args.message;
   // TODO: check if host already send quiz
   std::string game_code = generate_game_code(8);
-  games[game_code] = make_unique<Game>(game_code, client_fd);
+  games[game_code] = make_unique<Game>(game_code, client_fd, message);
 
   const auto &game = games[game_code];
 
@@ -198,7 +211,7 @@ void create_game(const CallbackArgs &args) {
   json json_game_code;
   json_game_code["gameCode"] = game_code;
 
-  enable_write(client_fd);
+  add_write_flag(epoll_fd, client_fd);
   clients[client_fd]->add_message_to_send_buffer("game_code",
                                                  json_game_code.dump());
   cout << "Create game: " << game_code << endl;
@@ -218,7 +231,7 @@ void join_game(const CallbackArgs &args) {
 
   const auto &game = games[game_code];
 
-  if (game->players.find(username) != game->players.end()) {
+  if (game->usernames.find(username) != game->usernames.end()) {
     // TODO: SEND TO THE CLIENT THAT USERNAME IS ALREADY TAKEN
     return;
   }
@@ -228,7 +241,8 @@ void join_game(const CallbackArgs &args) {
   clients[client_fd] = static_pointer_cast<Client>(player);
 
   cout << "Add " << username << " to " << game_code << endl;
-  game->players[username] = clients[client_fd];
+
+  game->add_player(clients[client_fd], username);
 
   int host_fd = games[game_code]->get_host_desc();
   auto host = clients[host_fd];
@@ -237,9 +251,64 @@ void join_game(const CallbackArgs &args) {
   user_data["username"] = args.message["username"];
 
   host->add_message_to_send_buffer("new_player", user_data.dump());
-  enable_write(host_fd);
+  add_write_flag(epoll_fd, host->get_sock_fd());
   cout << "Player: " << args.message["username"] << " joined room " << game_code
        << endl;
+}
+
+void next_question(const CallbackArgs &args) {
+  const auto host = static_pointer_cast<Host>(args.client);
+  const std::string &game_code = host->get_game_code();
+  const auto &game = games[game_code];
+  const json &question = game->get_next_question();
+  cout << "Should be here" << endl;
+  //    if (question.empty()) { // might not work
+  //        // end signal
+  //        cout << "End of the game" << endl;
+  //        // broadcast end
+  //        return;
+  //    }
+  const std::string standingMessage = game->standings.dump();
+  // broadcast question
+  for (auto &player : game->players) {
+    cout << "CLIENT fd" << player.first << endl;
+
+    player.second->add_message_to_send_buffer("question", question.dump());
+    player.second->add_message_to_send_buffer("standing", standingMessage);
+    add_write_flag(epoll_fd, player.first);
+  }
+
+  clients[game->host_desc]->add_message_to_send_buffer("standing",
+                                                       standingMessage);
+  add_write_flag(epoll_fd, game->host_desc);
+}
+
+void answer(const CallbackArgs &args) {
+  const auto player = static_pointer_cast<Player>(args.client);
+  const std::string &game_code = player->get_game_code();
+  const auto &game = games[game_code];
+
+  const json &message = args.message;
+
+  cout << "Player sent: " << message << endl;
+  const std::string &username =
+      game->player_fd_usernames[player->get_sock_fd()];
+
+  if (!game->submit_answer(username, message)) {
+    cout << "Answer not for the current question" << endl;
+    return;
+  }
+
+  const std::string standingMessage = game->standings.dump();
+  // broadcast question
+  for (auto &pl : game->players) {
+    pl.second->add_message_to_send_buffer("standing", standingMessage);
+    add_write_flag(epoll_fd, pl.first);
+  }
+
+  clients[game->host_desc]->add_message_to_send_buffer("standing",
+                                                       standingMessage);
+  add_write_flag(epoll_fd, game->host_desc);
 }
 
 void disconnect(const CallbackArgs &args) {
@@ -251,13 +320,12 @@ void disconnect(const CallbackArgs &args) {
 
 void ping(const CallbackArgs &args) {
   const int &client_fd = args.client->get_sock_fd();
-  epoll_event client_events{};
-  client_events.data.fd = client_fd;
+
   std::cout << "Message from client: " << args.message << std::endl;
-  client_events.events = EPOLLIN | EPOLLOUT;
-  epoll_ctl(epoll_fd, EPOLL_CTL_MOD, client_fd, &client_events);
+
   json pongJson;
   pongJson["pong"] = "ping";
 
   args.client->add_message_to_send_buffer("pong", pongJson.dump());
+  add_write_flag(epoll_fd, client_fd);
 }
