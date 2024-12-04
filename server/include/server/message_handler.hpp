@@ -22,7 +22,7 @@ private:
 
 public:
   MessageHandler(int fd);
-  ~MessageHandler()=default;
+  ~MessageHandler() = default;
 
   void add_to_send_buffer(const std::string &type, const std::string &message);
   bool sendBuffered();

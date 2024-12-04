@@ -19,12 +19,13 @@ public:
   Quiz quiz;
   Game(std::string code, int host_desc, const json &host_quiz);
 
-  ~Game()=default;
+  ~Game() = default;
 
   int get_host_desc() const;
 
   json get_next_question();
 
-  void add_player(const std::shared_ptr<Client>& cli, const std::string &username);
+  void add_player(const std::shared_ptr<Client> &cli,
+                  const std::string &username);
   bool submit_answer(const std::string &username, const json &answer);
 };

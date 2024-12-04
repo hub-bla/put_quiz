@@ -24,7 +24,8 @@ unordered_map<int, shared_ptr<Client>> clients;
 
 int epoll_fd;
 
-void game_broadcast(const std::unique_ptr<Game> &game, const std::string& type, const json& message);
+void game_broadcast(const std::unique_ptr<Game> &game, const std::string &type,
+                    const json &message);
 
 void delete_game(const std::string &game_code);
 
@@ -37,7 +38,7 @@ class CallbackArgs {
 public:
   shared_ptr<Client> client;
   json message;
-  CallbackArgs(json  mess, const shared_ptr<Client>& cli)
+  CallbackArgs(json mess, const shared_ptr<Client> &cli)
       : client(cli), message(std::move(mess)) {}
 
   ~CallbackArgs() = default;
@@ -138,16 +139,16 @@ int main() {
   return 0;
 }
 
-void game_broadcast(const std::unique_ptr<Game> &game, const std::string& type, const json& message) {
-  const std::string& dumped_mess = message.dump();
+void game_broadcast(const std::unique_ptr<Game> &game, const std::string &type,
+                    const json &message) {
+  const std::string &dumped_mess = message.dump();
 
   for (auto &player : game->players) {
     player.second->add_message_to_send_buffer(type, dumped_mess);
     add_write_flag(epoll_fd, player.first);
   }
 
-  clients[game->host_desc]->add_message_to_send_buffer(type,
-                                                       dumped_mess);
+  clients[game->host_desc]->add_message_to_send_buffer(type, dumped_mess);
   add_write_flag(epoll_fd, game->host_desc);
 }
 
@@ -180,15 +181,15 @@ std::string generate_game_code(const int &len) {
   std::string new_game_code;
   new_game_code.reserve(len);
   while (true) {
-      for (int i = 0; i < len; ++i) {
-          new_game_code += alphanum[rand() % (sizeof(alphanum) - 1)];
-      }
+    for (int i = 0; i < len; ++i) {
+      new_game_code += alphanum[rand() % (sizeof(alphanum) - 1)];
+    }
 
-      // generated code already exists -> try again
-      if (games.find(new_game_code) == games.end()) {
-          break;
-      }
-      new_game_code = "";
+    // generated code already exists -> try again
+    if (games.find(new_game_code) == games.end()) {
+      break;
+    }
+    new_game_code = "";
   }
 
   return new_game_code;
@@ -269,7 +270,6 @@ void next_question(const CallbackArgs &args) {
   //    }
   game_broadcast(game, "question", question);
   game_broadcast(game, "standing", game->standings);
-
 }
 
 void answer(const CallbackArgs &args) {
