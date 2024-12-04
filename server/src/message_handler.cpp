@@ -17,6 +17,7 @@ MessageHandler::~MessageHandler() {}
 bool MessageHandler::sendBuffered() {
   if (currently_sending.empty()) {
     if (write_buffer.empty()) {
+      std::cout << "Write buffer empty for: " << client_fd << std::endl;
       return true;
     }
     currently_sending = write_buffer.front();
@@ -115,5 +116,8 @@ std::pair<std::string, json> MessageHandler::readMessage() {
 
 void MessageHandler::add_to_send_buffer(const std::string &type,
                                         const std::string &message) {
+  std::cout << "Added " << type << " " << message << "to client " << client_fd
+            << std::endl;
   write_buffer.push(preprocess_message(type, message));
+  std::cout << "Buffer size: " << write_buffer.size() << std::endl;
 }

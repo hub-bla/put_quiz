@@ -11,4 +11,5 @@ public:
        std::string code);
   ~Host();
   void disconnect(const int &epoll_fd) override;
+  std::string get_game_code() const;
 };
