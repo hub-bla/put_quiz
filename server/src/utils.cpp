@@ -1,12 +1,11 @@
 #include "server/utils.h"
 #include <iostream>
+
 void add_write_flag(const int &epoll_fd, const int &client_fd) {
   epoll_event client_events{};
   client_events.data.fd = client_fd;
   client_events.events = EPOLLIN | EPOLLOUT;
-  int code = epoll_ctl(epoll_fd, EPOLL_CTL_MOD, client_fd, &client_events);
-  std::cout << "Set epollout on desc: " << client_fd << " epoll code: " << code
-            << std::endl;
+  epoll_ctl(epoll_fd, EPOLL_CTL_MOD, client_fd, &client_events);
 }
 
 std::vector<std::string> split(const std::string &str, char delimiter) {

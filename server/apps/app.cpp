@@ -2,6 +2,7 @@
 #include "server/game.hpp"
 #include "server/host.hpp"
 #include "server/player.hpp"
+#include "spdlog/spdlog.h"
 #include <ctime>
 #include <functional>
 #include <iostream>
@@ -59,6 +60,7 @@ unordered_map<std::string, CallbackType> callbacks{
     {"next_question", next_question}, {"answer", answer}};
 
 int main() {
+  spdlog::set_level(spdlog::level::debug);
   srand((unsigned)time(nullptr) * getpid());
 
   int server_fd;
@@ -105,8 +107,7 @@ int main() {
       client_events.events = EPOLLIN | EPOLLHUP | EPOLLOUT;
       client_events.data.fd = client_fd;
       epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &client_events);
-
-      cout << "Accepted client: " << client_fd << endl;
+      spdlog::info("New client with sock desc {0}", client_fd);
     } else {
       const auto client_fd = ee.data.fd;
       const auto &client = clients[client_fd];
@@ -123,11 +124,11 @@ int main() {
       }
 
       if (ee.events & EPOLLOUT) {
-        std::cout << "EPOLL SEND CLIENT FD: " << client_fd << std::endl;
         bool done = client->send_buffered();
 
         if (done) {
-          cout << "Message was sent" << endl;
+          spdlog::debug("All messages from client's [{0}] buffer were sent",
+                        client_fd);
           epoll_event client_events{};
           client_events.data.fd = client_fd;
           client_events.events = EPOLLIN | EPOLLHUP;
@@ -153,8 +154,8 @@ void game_broadcast(const std::unique_ptr<Game> &game, const std::string &type,
 }
 
 void delete_game(const std::string &game_code) {
-  // function that will be based to the host constructor
-  cout << "delete whole game" << endl;
+  // function that will be passed to the host constructor
+  spdlog::info("Delete Game: [{0}]", game_code);
   const auto &game = games[game_code];
   const auto players = game->players;
 
@@ -168,7 +169,8 @@ void delete_game(const std::string &game_code) {
 void remove_client_from_game(const std::string &game_code,
                              const std::string &username,
                              const int &client_fd) {
-  cout << "Remove " << username << " from " << game_code << endl;
+  spdlog::info("Game: [{0}] Player: [{1}] - remove from the game", game_code,
+               username);
   const auto &game = games[game_code];
   game->players.erase(client_fd);
   game->player_fd_usernames.erase(client_fd);
@@ -215,7 +217,7 @@ void create_game(const CallbackArgs &args) {
   add_write_flag(epoll_fd, client_fd);
   clients[client_fd]->add_message_to_send_buffer("game_code",
                                                  json_game_code.dump());
-  cout << "Create game: " << game_code << endl;
+  spdlog::info("Create game: {0}", game_code);
 }
 
 void join_game(const CallbackArgs &args) {
@@ -241,8 +243,7 @@ void join_game(const CallbackArgs &args) {
       client_fd, remove_client_from_game, game_code, username);
   clients[client_fd] = static_pointer_cast<Client>(player);
 
-  cout << "Add " << username << " to " << game_code << endl;
-
+  spdlog::debug("Add Player: [{0}] to the Game: [{1}]", username, game_code);
   game->add_player(clients[client_fd], username);
 
   int host_fd = games[game_code]->get_host_desc();
@@ -253,8 +254,8 @@ void join_game(const CallbackArgs &args) {
 
   host->add_message_to_send_buffer("new_player", user_data.dump());
   add_write_flag(epoll_fd, host->get_sock_fd());
-  cout << "Player: " << args.message["username"] << " joined room " << game_code
-       << endl;
+
+  spdlog::info("Game: [{0}], Player: [{1}] - joined room", game_code, username);
 }
 
 void next_question(const CallbackArgs &args) {
@@ -274,17 +275,19 @@ void next_question(const CallbackArgs &args) {
 
 void answer(const CallbackArgs &args) {
   const auto player = static_pointer_cast<Player>(args.client);
+  const int &player_fd = player->get_sock_fd();
   const std::string &game_code = player->get_game_code();
   const auto &game = games[game_code];
-
+  const std::string &username = game->player_fd_usernames[player_fd];
   const json &message = args.message;
 
-  cout << "Player sent: " << message << endl;
-  const std::string &username =
-      game->player_fd_usernames[player->get_sock_fd()];
+  spdlog::debug("Game: [{0}], Player: [{1}] - answer was sent", game_code,
+                username);
 
   if (!game->submit_answer(username, message)) {
-    cout << "Answer not for the current question" << endl;
+    spdlog::warn(
+        "Game: [{0}] Player: [{1}] - Answer not for the current question",
+        game_code, username);
     return;
   }
 
@@ -295,7 +298,7 @@ void disconnect(const CallbackArgs &args) {
   const int &client_fd = args.client->get_sock_fd();
   args.client->disconnect(epoll_fd); // removes from epoll and closes socket
   clients.erase(client_fd);
-  cout << "Client: " << client_fd << " disconnected" << endl;
+  spdlog::info("Client: [{0}] - disconnected", client_fd);
 }
 
 void ping(const CallbackArgs &args) {
