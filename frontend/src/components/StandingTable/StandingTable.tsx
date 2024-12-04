@@ -2,99 +2,84 @@ import { useEffect, useState } from "react"
 import { Standing } from "./types"
 import StandingTableRow from "./StandingTableRow/StandingTableRow"
 import "./StandingTable.css"
+import { useSocketContext } from "@/utils"
+
+type Standings = {
+	[username: string]: Standing
+}
 
 interface StandingMessage {
 	numberOfQuestions: number
-	standings: Array<Standing>
+	standings: Standings
 }
 
 const MOCK_DATA: StandingMessage = {
 	numberOfQuestions: 10,
-	standings: [
-		{
-			userName: "ktos2", // cap it to 20 chars
+	standings: {
+		ktos2: {
 			answeredCorrectly: 0,
 			answeredWrong: 5,
 			points: 10000,
 		},
-		{
-			userName: "kto3",
-			answeredCorrectly: 3,
-			answeredWrong: 4,
-			points: 200,
-		},
-		{
-			userName: "ktos",
-			answeredCorrectly: 4,
-			answeredWrong: 3,
-			points: 421,
-		},
-		{
-			userName: "kto5",
-			answeredCorrectly: 3,
-			answeredWrong: 4,
-			points: 203,
-		},
-		{
-			userName: "ktos4",
-			answeredCorrectly: 4,
-			answeredWrong: 3,
-			points: 421,
-		},
-		{
-			userName: "kto6",
-			answeredCorrectly: 3,
-			answeredWrong: 4,
-			points: 241,
-		},
-		{
-			userName: "ktos7",
-			answeredCorrectly: 4,
-			answeredWrong: 3,
-			points: 452,
-		},
-	],
+	},
 }
 
 const BASE_TOP_POS = 65
 const HEADER_SPACE_POS = 40
 
 const StandingTable: React.FC = () => {
-	const [standingsData, setStandingsData] = useState(MOCK_DATA)
+	const { newMessage } = useSocketContext()
+	const [standingsData, setStandingsData] = useState<StandingMessage>({
+		numberOfQuestions: 0,
+		standings: {},
+	})
+
+	// useEffect(() => {
+	// 	// NOTE: Following lines are just for testing animations
+	// 	const testId = setTimeout(() => {
+	// 		setStandingsData((prev) => {
+	// 			const newPoints = prev["standings"].map((standing) => standing)
+
+	// 			newPoints[1]["points"] = 1000
+	// newPoints[1]["answeredCorrectly"] = 8
+	// 			newPoints[1]["answeredWrong"] = 2
+	// 			newPoints[2]["points"] = 20
+	// 			newPoints[2]["answeredCorrectly"] = 7
+	// 			newPoints[2]["answeredWrong"] = 3
+	// 			return {
+	// 				...prev,
+	// 				standings: newPoints,
+	// 			}
+	// 		})
+	// 	}, 3000)
+
+	// 	return () => {
+	// 		clearTimeout(testId)
+	// 	}
+	// }, [])
 
 	useEffect(() => {
-		// NOTE: Following lines are just for testing animations
-		const testId = setTimeout(() => {
-			setStandingsData((prev) => {
-				const newPoints = prev["standings"].map((standing) => standing)
-
-				newPoints[1]["points"] = 1000
-				newPoints[1]["answeredCorrectly"] = 8
-				newPoints[1]["answeredWrong"] = 2
-				newPoints[2]["points"] = 20
-				newPoints[2]["answeredCorrectly"] = 7
-				newPoints[2]["answeredWrong"] = 3
-				return {
-					...prev,
-					standings: newPoints,
-				}
-			})
-		}, 3000)
-
-		return () => {
-			clearTimeout(testId)
+		const { type, data } = newMessage
+		if (type.length != 0) {
+			if (type == "standing") {
+				setStandingsData(data)
+			}
 		}
-	}, [])
+	}, [newMessage])
 
-	const tableData = standingsData["standings"]
-		.sort((standing1, standing2) => standing2["points"] - standing1["points"])
+	const tableData = Object.entries(standingsData["standings"])
+		.sort(
+			(standing1, standing2) => standing2[1]["points"] - standing1[1]["points"]
+		)
 		.map((standing, rank) => {
+			const username = standing[0]
 			return (
 				<StandingTableRow
-					key={standing["userName"]}
+					key={username}
 					rank={rank + 1}
+					username={username}
 					numberOfQuestions={MOCK_DATA["numberOfQuestions"]}
-					standing={standing}
+					standing={standing[1]}
 					startingPos={BASE_TOP_POS * (rank + 1)}
 				/>
 			)
@@ -107,7 +92,7 @@ const StandingTable: React.FC = () => {
 			<div>
 				<div className='table-headers' style={{ height: HEADER_SPACE_POS }}>
 					<div className='left-align-header rank'>Rank</div>
-					<div className='left-align-header username'>Username</div>
+					<div className='left-align-header username'>username</div>
 					<div className='left-align-header answers'>Answers</div>
 					<div className='left-align-header points'>Points</div>
 				</div>
