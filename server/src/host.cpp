@@ -4,7 +4,7 @@ Host::~Host() {}
 
 Host::Host(int fd, std::function<void(std::string)> remove_game_fp,
            std::string code)
-    : Client(fd), remove_game(remove_game_fp), game_code(code) {}
+    : Client(fd), game_code(code), remove_game(remove_game_fp) {}
 
 void Host::disconnect(const int &epoll_fd) {
   remove_game(game_code);

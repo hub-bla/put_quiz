@@ -96,7 +96,8 @@ std::pair<std::string, json> MessageHandler::readMessage() {
     }
   }
 
-  if (!currently_read.empty() && read_message_size == currently_read.size()) {
+  if (!currently_read.empty() &&
+      read_message_size == static_cast<int>(currently_read.size())) {
     json json_message = json::parse(currently_read);
     std::string message_type = read_message_type;
 
