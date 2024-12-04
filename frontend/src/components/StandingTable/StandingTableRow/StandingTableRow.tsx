@@ -3,12 +3,13 @@ import { Standing } from "../types"
 import AnswerBar from "./AnswersBar/AnswerBar"
 import "./StandingTableRow.css"
 import "../StandingTable.css"
-import useMediaQueries from "../../../utils/hooks/useMediaQueries"
+import { useMediaQueries } from "@/utils"
 
 interface StandingTableRowProps {
 	rank: number
 	numberOfQuestions: number
 	startingPos: number
+	username: string
 	standing: Standing
 }
 
@@ -16,10 +17,11 @@ const StandingTableRow: React.FC<StandingTableRowProps> = ({
 	rank,
 	numberOfQuestions,
 	startingPos,
+	username,
 	standing,
 }) => {
 	const [rowTop, setRowTop] = useState(startingPos)
-	const { userName, answeredCorrectly, answeredWrong, points } = standing
+	const { answeredCorrectly, answeredWrong, points } = standing
 	const { md } = useMediaQueries()
 
 	useEffect(() => {
@@ -35,7 +37,7 @@ const StandingTableRow: React.FC<StandingTableRowProps> = ({
 	return (
 		<div style={{ top: rowTop }} className='standing-row animate-row'>
 			<div className='rank'>{rank}</div>
-			<div className='username'>{userName}</div>
+			<div className='username'>{username}</div>
 			<div className='answers'>
 				<AnswerBar
 					correctAnswers={answeredCorrectly}
