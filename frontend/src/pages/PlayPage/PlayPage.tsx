@@ -25,7 +25,10 @@ export const PlayPage: React.FC = () => {
 	}[readyState]
 
 	useEffect(() => {
-		const { type, data } = newMessage
+		const { type, data } = newMessage as {
+			type: string
+			data: Question
+		}
 
 		if (type.length != 0) {
 			if (type === "question") {

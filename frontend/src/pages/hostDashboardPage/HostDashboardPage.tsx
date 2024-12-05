@@ -1,6 +1,7 @@
 import StandingTable from "@/components/StandingTable/StandingTable"
 import { useSocketContext } from "@/utils"
 import { useEffect } from "react"
+import "./HostDashboardPage.css"
 
 export const HostDashboardPage: React.FC = () => {
 	const { preprocessMessage, sendMessage, newMessage } = useSocketContext()
@@ -19,9 +20,9 @@ export const HostDashboardPage: React.FC = () => {
 	}, [newMessage])
 
 	return (
-		<>
+		<div className='dashboard'>
 			<button onClick={() => nextQuestion()}>Next question</button>
 			<StandingTable />
-		</>
+		</div>
 	)
 }

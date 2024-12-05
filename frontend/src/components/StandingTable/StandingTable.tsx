@@ -59,9 +59,15 @@ const StandingTable: React.FC = () => {
 	// }, [])
 
 	useEffect(() => {
-		const { type, data } = newMessage
+		const { type, data } = newMessage as {
+			type: string
+			data: StandingMessage
+		}
 		if (type.length != 0) {
 			if (type == "standing") {
+				if (!data["standings"]) {
+					data["standings"] = {}
+				}
 				setStandingsData(data)
 			}
 		}

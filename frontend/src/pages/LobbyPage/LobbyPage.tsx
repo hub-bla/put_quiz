@@ -32,7 +32,7 @@ export const LobbyPage: React.FC = () => {
 		navigate("/" + HOST_DASHBOARD_ROUTE)
 	}
 
-	const handleBeforeUnload = (event) => {
+	const handleBeforeUnload = (event: BeforeUnloadEvent) => {
 		if (gameCode !== "") {
 			event.preventDefault()
 			event.returnValue = "" // This triggers the browser's confirmation dialog.
