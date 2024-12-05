@@ -1,5 +1,10 @@
 ![](./lecina.png)
 
+## Init submodules
+```
+git submodule update --init --recursive
+```
+
 ## Run websockify
 ```
 ./run 8080 127.0.0.1:8913
