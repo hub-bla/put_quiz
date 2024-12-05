@@ -14,9 +14,7 @@ interface ISocketContext {
 	lastMessage: MessageEvent | null
 	newMessage: {
 		type: string
-		data: {
-			gameCode: string
-		}
+		data: Record<string, any>
 	}
 	checkSocket: (navigate: NavigateFunction) => void
 }
