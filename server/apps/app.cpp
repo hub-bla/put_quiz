@@ -235,9 +235,19 @@ void join_game(const CallbackArgs &args) {
   const auto &game = games[game_code];
 
   if (game->usernames.find(username) != game->usernames.end()) {
-    // TODO: SEND TO THE CLIENT THAT USERNAME IS ALREADY TAKEN
+    json username_already_exists_message;
+    username_already_exists_message["text"] =
+        "Player with provided username already exists.";
+    args.client->add_message_to_send_buffer(
+        "error", username_already_exists_message.dump());
+    add_write_flag(epoll_fd, client_fd);
+    spdlog::error(
+        "Game: [{0}] - player with username [{1}] already exists in this game.",
+        game_code, username);
     return;
   }
+
+  // TODO: If the game started should we allow new players to join ??
 
   shared_ptr<Player> player = make_shared<Player>(
       client_fd, remove_client_from_game, game_code, username);
@@ -254,7 +264,10 @@ void join_game(const CallbackArgs &args) {
 
   host->add_message_to_send_buffer("new_player", user_data.dump());
   add_write_flag(epoll_fd, host->get_sock_fd());
-
+  json ok_message;
+  ok_message["text"] = "ok";
+  clients[client_fd]->add_message_to_send_buffer("ok", ok_message.dump());
+  add_write_flag(epoll_fd, client_fd);
   spdlog::info("Game: [{0}], Player: [{1}] - joined room", game_code, username);
 }
 

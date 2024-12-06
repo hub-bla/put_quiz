@@ -29,7 +29,6 @@ export const PlayPage: React.FC = () => {
 			type: string
 			data: Question
 		}
-
 		if (type.length != 0) {
 			if (type === "question") {
 				setCurrentQuestionData(data)
