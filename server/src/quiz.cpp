@@ -5,12 +5,12 @@ Quiz::Quiz(json content) { parse_content(content); };
 Quiz::~Quiz(){};
 
 json Quiz::get_next_question() {
+  if (this->is_finished()) {
+    return nullptr;
+  };
   current_question = questions.front();
   questions.pop();
   count -= 1;
-  if (count == 0) {
-    return nullptr;
-  }
 
   return current_question.get_question();
 };
