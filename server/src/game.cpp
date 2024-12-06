@@ -2,15 +2,16 @@
 #include <iostream>
 #include <utility>
 Game::Game(std::string code, int host_fd, const json &host_quiz)
-    : host_desc(host_fd), game_code(std::move(code)), quiz(host_quiz), is_started(false) {
+    : host_desc(host_fd), game_code(std::move(code)), quiz(host_quiz),
+      is_started(false) {
   standings["numberOfQuestions"] = quiz.get_number_of_questions();
   standings["standings"] = json();
 }
 
 int Game::get_host_desc() const { return host_desc; }
 
-json Game::get_next_question() { 
-    if (!this->is_started){
+json Game::get_next_question() {
+  if (!this->is_started) {
     this->is_started = true;
   }
   return quiz.get_next_question();
