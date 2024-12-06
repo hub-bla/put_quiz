@@ -227,29 +227,28 @@ void join_game(const CallbackArgs &args) {
 
   if (games.find(game_code) == games.end()) {
     json game_code_not_exists_message;
-    game_code_not_exists_message["text"] =
-        "Game code does not exist.";
+    game_code_not_exists_message["text"] = "Game code does not exist.";
     args.client->add_message_to_send_buffer(
         "error", game_code_not_exists_message.dump());
     add_write_flag(epoll_fd, client_fd);
-    spdlog::error(
-        "Game code: [{0}] not exists, User: [{1}]",
-        game_code, username);
+    spdlog::error("Game code: [{0}] not exists, User: [{1}]", game_code,
+                  username);
     return;
   }
 
   const auto &game = games[game_code];
 
   if (game->is_started) {
-      json already_started_game_message;
-      already_started_game_message["text"] =
-          "The game has already started. You cannot join an ongoing game.";
-      args.client->add_message_to_send_buffer(
-          "error", already_started_game_message.dump());
-      add_write_flag(epoll_fd, client_fd);
-      spdlog::error(          "Game: [{}] - player with username [{}] attempted to join an already started game.",
-          game_code, username);
-      return;
+    json already_started_game_message;
+    already_started_game_message["text"] =
+        "The game has already started. You cannot join an ongoing game.";
+    args.client->add_message_to_send_buffer(
+        "error", already_started_game_message.dump());
+    add_write_flag(epoll_fd, client_fd);
+    spdlog::error("Game: [{}] - player with username [{}] attempted to join an "
+                  "already started game.",
+                  game_code, username);
+    return;
   }
 
   if (game->usernames.find(username) != game->usernames.end()) {
