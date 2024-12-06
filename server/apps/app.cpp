@@ -224,8 +224,6 @@ void join_game(const CallbackArgs &args) {
   const int &client_fd = args.client->get_sock_fd();
   std::string game_code = args.message["gameCode"];
   std::string username = args.message["username"];
-  // TODO: validate if the game code actually exists and if the username does
-  // not exists in the room
 
   if (games.find(game_code) == games.end()) {
     json game_code_not_exists_message;
@@ -242,6 +240,19 @@ void join_game(const CallbackArgs &args) {
 
   const auto &game = games[game_code];
 
+    if (game->is_started) {
+      json already_started_game_message;
+      already_started_game_message["text"] =
+          "The game has already started. You cannot join an ongoing game.";
+      args.client->add_message_to_send_buffer(
+          "error", already_started_game_message.dump());
+      add_write_flag(epoll_fd, client_fd);
+      spdlog::error(
+          "Game: [{}] - player with username [{}] attempted to join an already started game.",
+          game_code, username);
+      return;
+  }
+
   if (game->usernames.find(username) != game->usernames.end()) {
     json username_already_exists_message;
     username_already_exists_message["text"] =
@@ -254,8 +265,6 @@ void join_game(const CallbackArgs &args) {
         game_code, username);
     return;
   }
-
-  // TODO: If the game started should we allow new players to join ??
 
   shared_ptr<Player> player = make_shared<Player>(
       client_fd, remove_client_from_game, game_code, username);
