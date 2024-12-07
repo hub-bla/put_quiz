@@ -17,6 +17,8 @@ public:
   std::unordered_set<std::string> usernames;
 
   Quiz quiz;
+  bool is_started;
+
   Game(std::string code, int host_desc, const json &host_quiz);
 
   ~Game() = default;
