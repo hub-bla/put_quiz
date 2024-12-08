@@ -1,1 +1,1 @@
-export * from "./HostDashBoardPage"
+export * from "./HostDashboardPage"

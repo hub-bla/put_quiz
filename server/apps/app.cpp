@@ -3,6 +3,7 @@
 #include "server/host.hpp"
 #include "server/player.hpp"
 #include "spdlog/spdlog.h"
+#include <chrono>
 #include <ctime>
 #include <functional>
 #include <iostream>
@@ -10,6 +11,7 @@
 #include <string>
 #include <sys/epoll.h>
 #include <sys/socket.h>
+#include <thread>
 #include <unistd.h>
 #include <unordered_map>
 
@@ -17,13 +19,64 @@ using json = nlohmann::json;
 
 #define SERVER_PORT 8913
 #define QUEUE_SIZE 1
+#define GAME_CODE_SIZE 8
+#define PRI_TIMER 0
+#define PRI_SERVER_EPOLL 1
+#define TIME_FOR_ANS_MS 5000
+
 using namespace std;
 
 unordered_map<std::string, unique_ptr<Game>> games;
 
 unordered_map<int, shared_ptr<Client>> clients;
 
+int priority_epoll_fd;
 int epoll_fd;
+int pipe_fd[2]{};
+
+struct TimerEvent {
+  string game_code;
+  string question;
+  chrono::time_point<chrono::system_clock> start;
+};
+
+SemaphoreQueue<TimerEvent> timeouts{};
+
+void thread_timer(int pipe_write_fd) {
+  Client timer_writer(pipe_write_fd);
+
+  typedef std::chrono::milliseconds ms;
+  while (true) {
+    const auto timer_event = timeouts.pop();
+    const auto t2 = std::chrono::system_clock::now();
+    const auto int_ms = std::chrono::duration_cast<ms>(t2 - timer_event.start);
+
+    spdlog::debug("TIMER - Elapsed time: {0}", int_ms.count());
+
+    if (int_ms.count() < TIME_FOR_ANS_MS) {
+      std::chrono::milliseconds duration(TIME_FOR_ANS_MS - int_ms.count());
+      std::this_thread::sleep_for(duration);
+    }
+
+    // send game_code over the pipe
+    string game_code = timer_event.game_code;
+
+    json timeoutMessage;
+    timeoutMessage["question"] = timer_event.question;
+    timer_writer.add_message_to_send_buffer(game_code, timeoutMessage.dump());
+
+    bool done = false;
+    while (true) {
+      done = timer_writer.send_buffered();
+      if (done) {
+        break;
+      }
+    }
+    spdlog::debug("TIMER - sending timeout message to main thread");
+  }
+}
+
+void send_timeout(const string &game_code, const json &timeout_message);
 
 void game_broadcast(const std::unique_ptr<Game> &game, const std::string &type,
                     const json &message);
@@ -35,8 +88,7 @@ void remove_client_from_game(const std::string &game_code,
 
 std::string generate_game_code(const int &len);
 
-class CallbackArgs {
-public:
+struct CallbackArgs {
   shared_ptr<Client> client;
   json message;
   CallbackArgs(json mess, const shared_ptr<Client> &cli)
@@ -63,8 +115,16 @@ int main() {
   spdlog::set_level(spdlog::level::debug);
   srand((unsigned)time(nullptr) * getpid());
 
+  if (pipe(pipe_fd) == -1) {
+    perror("pipe");
+    exit(EXIT_FAILURE);
+  }
+
+  Client timer_reader(pipe_fd[0]);
+
   int server_fd;
-  epoll_fd = epoll_create1(0);
+  priority_epoll_fd = epoll_create1(0);
+  epoll_fd = epoll_create1(0); // TODO: Handle errors
   epoll_event ee{};
 
   server_fd = socket(PF_INET, SOCK_STREAM, 0);
@@ -97,44 +157,94 @@ int main() {
 
   epoll_ctl(epoll_fd, EPOLL_CTL_ADD, server_fd, &ee);
 
+  /*
+   * PRIORITY EPOLL SETUP
+   */
+  epoll_event pri_ee{};
+
+  pri_ee.events = EPOLLIN;
+  pri_ee.data.u32 = PRI_TIMER;
+
+  epoll_ctl(priority_epoll_fd, EPOLL_CTL_ADD, pipe_fd[0], &pri_ee);
+
+  pri_ee = {};
+  pri_ee.events = EPOLLIN;
+  pri_ee.data.u32 = PRI_SERVER_EPOLL;
+
+  epoll_ctl(priority_epoll_fd, EPOLL_CTL_ADD, epoll_fd, &pri_ee);
+
+  epoll_event pri_events[2];
+  int n_pri_events;
+  bool timer_event = false;
+  bool server_event = false;
+
+  thread th(thread_timer, pipe_fd[1]);
+
+  th.detach();
+
   while (1) {
-    epoll_wait(epoll_fd, &ee, 1, -1);
-    if (ee.data.fd == server_fd) {
-      int client_fd = accept(server_fd, nullptr, nullptr);
+    n_pri_events = epoll_wait(priority_epoll_fd, pri_events, 2, -1);
 
-      epoll_event client_events{};
-      clients[client_fd] = make_shared<Client>(client_fd);
-      client_events.events = EPOLLIN | EPOLLHUP | EPOLLOUT;
-      client_events.data.fd = client_fd;
-      epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &client_events);
-      spdlog::info("New client with sock desc {0}", client_fd);
-    } else {
-      const auto client_fd = ee.data.fd;
-      const auto &client = clients[client_fd];
+    for (int i = 0; i < n_pri_events; i++) {
+      if (pri_events[i].data.u32 == PRI_TIMER) {
+        timer_event = true;
+      } else {
+        server_event = true;
+      }
+    }
+    spdlog::debug("TIMER EVENT: {0}, SERVER EVENT: {1}", timer_event,
+                  server_event);
 
-      if (ee.events & EPOLLIN) {
-        const auto [type, message] = client->read_message();
+    if (timer_event) {
+      const auto [game_code, message] = timer_reader.read_message();
 
-        if (!type.empty() && callbacks.find(type) != callbacks.end()) {
-          // now here we can do something like callbacks[type](message, client)
-          // code becomes more modular
-          auto callback_args = CallbackArgs(message, client);
-          callbacks[type](callback_args);
-        }
+      if (!game_code.empty()) {
+        send_timeout(game_code, message);
       }
 
-      if (ee.events & EPOLLOUT) {
-        bool done = client->send_buffered();
+      timer_event = false;
+    }
 
-        if (done) {
-          spdlog::debug("All messages from client's [{0}] buffer were sent",
-                        client_fd);
-          epoll_event client_events{};
-          client_events.data.fd = client_fd;
-          client_events.events = EPOLLIN | EPOLLHUP;
-          epoll_ctl(epoll_fd, EPOLL_CTL_MOD, client_fd, &client_events);
+    if (server_event) {
+      epoll_wait(epoll_fd, &ee, 1, -1);
+      if (ee.data.fd == server_fd) {
+        int client_fd = accept(server_fd, nullptr, nullptr);
+
+        epoll_event client_events{};
+        clients[client_fd] = make_shared<Client>(client_fd);
+        client_events.events = EPOLLIN | EPOLLHUP | EPOLLOUT;
+        client_events.data.fd = client_fd;
+        epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &client_events);
+        spdlog::info("New client with sock desc {0}", client_fd);
+      } else {
+        const auto client_fd = ee.data.fd;
+        const auto &client = clients[client_fd];
+
+        if (ee.events & EPOLLIN) {
+          const auto [type, message] = client->read_message();
+
+          if (!type.empty() && callbacks.find(type) != callbacks.end()) {
+            // now here we can do something like callbacks[type](message,
+            // client) code becomes more modular
+            auto callback_args = CallbackArgs(message, client);
+            callbacks[type](callback_args);
+          }
+        }
+
+        if (ee.events & EPOLLOUT) {
+          bool done = client->send_buffered();
+
+          if (done) {
+            spdlog::debug("All messages from client's [{0}] buffer were sent",
+                          client_fd);
+            epoll_event client_events{};
+            client_events.data.fd = client_fd;
+            client_events.events = EPOLLIN | EPOLLHUP;
+            epoll_ctl(epoll_fd, EPOLL_CTL_MOD, client_fd, &client_events);
+          }
         }
       }
+      server_event = false;
     }
   }
   return 0;
@@ -201,7 +311,7 @@ void create_game(const CallbackArgs &args) {
   const int &client_fd = args.client->get_sock_fd();
   const json &message = args.message;
   // TODO: check if host already send quiz
-  std::string game_code = generate_game_code(8);
+  std::string game_code = generate_game_code(GAME_CODE_SIZE);
   games[game_code] = make_unique<Game>(game_code, client_fd, message);
 
   const auto &game = games[game_code];
@@ -290,13 +400,24 @@ void next_question(const CallbackArgs &args) {
   const auto host = static_pointer_cast<Host>(args.client);
   const std::string &game_code = host->get_game_code();
   const auto &game = games[game_code];
-  const json &question = game->get_next_question();
+  json question = game->get_next_question();
   //    if (question.empty()) { // might not work
   //        // end signal
   //        cout << "End of the game" << endl;
   //        // broadcast end
   //        return;
   //    }
+
+  TimerEvent te{};
+  te.game_code = game_code;
+  te.question = question["text"];
+  te.start = std::chrono::system_clock::now();
+  timeouts.push(te);
+
+  auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
+                          te.start.time_since_epoch())
+                          .count();
+  question["start"] = milliseconds;
   game_broadcast(game, "question", question);
   game_broadcast(game, "standing", game->standings);
 }
@@ -339,4 +460,18 @@ void ping(const CallbackArgs &args) {
 
   args.client->add_message_to_send_buffer("pong", pongJson.dump());
   add_write_flag(epoll_fd, client_fd);
+}
+
+void send_timeout(const string &game_code, const json &timeout_message) {
+  if (games.find(game_code) == games.end()) {
+    // Couldn't send timeout, game does not exist;
+    return;
+  }
+  const auto &game = games[game_code];
+  const auto &question = game->quiz.get_current_question();
+
+  // send timeout only if it's for current question
+  if (question["text"] == timeout_message["question"]) {
+    game_broadcast(game, "timeout", timeout_message);
+  }
 }

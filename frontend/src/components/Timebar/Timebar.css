@@ -1,0 +1,9 @@
+.timebar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 10px;
+    background-color: #646cff;
+    border-radius: 10px;
+    transition: width 0.1s;
+}
