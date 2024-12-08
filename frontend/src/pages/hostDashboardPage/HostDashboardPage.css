@@ -5,3 +5,17 @@
 	gap: 20px;
 	min-height: 80vh;
 }
+
+.dashboard-header {
+	display: flex;
+	align-items: center; 
+	justify-content: space-between; 
+	border-bottom: 1px solid #ccc; 
+	width: 80vw;
+	padding: 15px;
+}
+
+
+.question-preview{
+	max-width: 80vh;
+}
