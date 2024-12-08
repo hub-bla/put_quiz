@@ -17,13 +17,13 @@ private:
 
 public:
   SemaphoreQueue() {
-    pthread_mutex_init(&mtx, nullptr); // Initialize the mutex
-    sem_init(&sem, 0, 0);              // Initialize semaphore with 0 (no items)
+    pthread_mutex_init(&mtx, nullptr);
+    sem_init(&sem, 0, 0);
   }
 
   ~SemaphoreQueue() {
-    pthread_mutex_destroy(&mtx); // Destroy the mutex
-    sem_destroy(&sem);           // Destroy the semaphore
+    pthread_mutex_destroy(&mtx);
+    sem_destroy(&sem);
   }
 
   void push(const T item) {
