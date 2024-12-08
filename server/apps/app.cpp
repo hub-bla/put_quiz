@@ -402,7 +402,7 @@ void next_question(const CallbackArgs &args) {
   const auto &game = games[game_code];
   json question = game->get_next_question();
 
-  if (question == nullptr){
+  if (question == nullptr) {
     spdlog::info("Game: [{0}] finished", game_code);
     return;
   }
