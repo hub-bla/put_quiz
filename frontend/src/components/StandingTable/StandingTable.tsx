@@ -1,8 +1,6 @@
-import { useEffect, useState } from "react"
 import { Standing } from "./types"
 import StandingTableRow from "./StandingTableRow/StandingTableRow"
 import "./StandingTable.css"
-import { useSocketContext } from "@/utils"
 
 type Standings = {
 	[username: string]: Standing
@@ -24,15 +22,14 @@ const MOCK_DATA: StandingMessage = {
 	},
 }
 
+interface StandingTableProps {
+	standingsData: StandingMessage
+}
+
 const BASE_TOP_POS = 65
 const HEADER_SPACE_POS = 40
 
-const StandingTable: React.FC = () => {
-	const { newMessage } = useSocketContext()
-	const [standingsData, setStandingsData] = useState<StandingMessage>({
-		numberOfQuestions: 0,
-		standings: {},
-	})
+const StandingTable: React.FC<StandingTableProps> = ({standingsData}) => {
 
 	// useEffect(() => {
 	// 	// NOTE: Following lines are just for testing animations
@@ -57,21 +54,6 @@ const StandingTable: React.FC = () => {
 	// 		clearTimeout(testId)
 	// 	}
 	// }, [])
-
-	useEffect(() => {
-		const { type, data } = newMessage as {
-			type: string
-			data: StandingMessage
-		}
-		if (type.length != 0) {
-			if (type == "standing") {
-				if (!data["standings"]) {
-					data["standings"] = {}
-				}
-				setStandingsData(data)
-			}
-		}
-	}, [newMessage])
 
 	const tableData = Object.entries(standingsData["standings"])
 		.sort(
