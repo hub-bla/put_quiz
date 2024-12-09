@@ -1,0 +1,9 @@
+.question-preview{
+    word-wrap: break-word;
+	overflow-wrap: break-word; 
+	white-space: normal
+}
+
+.preview-header{
+    text-align: right;
+}

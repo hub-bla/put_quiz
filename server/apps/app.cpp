@@ -401,12 +401,11 @@ void next_question(const CallbackArgs &args) {
   const std::string &game_code = host->get_game_code();
   const auto &game = games[game_code];
   json question = game->get_next_question();
-  //    if (question.empty()) { // might not work
-  //        // end signal
-  //        cout << "End of the game" << endl;
-  //        // broadcast end
-  //        return;
-  //    }
+
+  if (question == nullptr) {
+    spdlog::info("Game: [{0}] finished", game_code);
+    return;
+  }
 
   TimerEvent te{};
   te.game_code = game_code;
