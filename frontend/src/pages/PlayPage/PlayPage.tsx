@@ -1,12 +1,18 @@
 import { QuestionCard } from "@/components/QuestionCard"
 import StandingTable from "@/components/StandingTable/StandingTable"
 import { Timebar } from "@/components/Timebar"
-import { ANS_TIME_MS, Question, StandingMessage, TIMEBAR_UPDATE_MS, useSocketContext } from "@/utils"
+import {
+	ANS_TIME_MS,
+	Question,
+	StandingMessage,
+	TIMEBAR_UPDATE_MS,
+	useSocketContext,
+} from "@/utils"
 import { useEffect, useState } from "react"
 import { ReadyState } from "react-use-websocket"
 
 interface Timeout {
-	timeLeft: number,
+	timeLeft: number
 	intervalId: NodeJS.Timeout | null
 }
 
@@ -25,13 +31,16 @@ export const PlayPage: React.FC = () => {
 		standings: {},
 	})
 
+	const [end, setEnd] = useState(false)
+
 	const [timeLeftMs, setTimeLeftMs] = useState<Timeout>({
 		timeLeft: ANS_TIME_MS,
-		intervalId: null
+		intervalId: null,
 	})
 
 	const [standingPhase, setStandingPhase] = useState(false)
-	const { readyState, newMessage } = useSocketContext()
+	const { readyState, newMessage, sendMessage, preprocessMessage } =
+		useSocketContext()
 
 	const setAnswered = () => {
 		setStandingPhase(true)
@@ -46,13 +55,15 @@ export const PlayPage: React.FC = () => {
 	}[readyState]
 
 	const handleTimeLeft = () => {
-		setTimeLeftMs(prevTimeLeftMs => ({...prevTimeLeftMs, timeLeft: prevTimeLeftMs.timeLeft-TIMEBAR_UPDATE_MS}))
+		setTimeLeftMs((prevTimeLeftMs) => ({
+			...prevTimeLeftMs,
+			timeLeft: prevTimeLeftMs.timeLeft - TIMEBAR_UPDATE_MS,
+		}))
 	}
 
 	useEffect(() => {
 		const { type } = newMessage
 		if (type.length != 0) {
-			
 			if (type === "question") {
 				const { data } = newMessage as {
 					type: string
@@ -64,14 +75,16 @@ export const PlayPage: React.FC = () => {
 				}
 
 				setTimeLeftMs({
-					timeLeft: ANS_TIME_MS - (new Date().getTime() - Number(data.start ? data.start : 0)),
-					intervalId: setInterval(() => handleTimeLeft(), TIMEBAR_UPDATE_MS)
+					timeLeft:
+						ANS_TIME_MS -
+						(new Date().getTime() - Number(data.start ? data.start : 0)),
+					intervalId: setInterval(() => handleTimeLeft(), TIMEBAR_UPDATE_MS),
 				})
 
 				setCurrentQuestionData(data)
 				setStandingPhase(false)
 			} else if (type === "timeout") {
-				const {data} = newMessage as {
+				const { data } = newMessage as {
 					type: string
 					data: TimeoutMessage
 				}
@@ -79,19 +92,22 @@ export const PlayPage: React.FC = () => {
 				if (currentQuestionData.text === data.question) {
 					setStandingPhase(true)
 				}
-
-			} else if (type === "standing"){
+			} else if (type === "standing") {
 				const { data } = newMessage as {
 					type: string
 					data: StandingMessage
 				}
-				
+
 				if (!data["standings"]) {
-						data["standings"] = {}
+					data["standings"] = {}
 				}
 				setStandingsData(data)
+			} else if (type === "end") {
+				setEnd(true)
+				const mess = preprocessMessage("DISCONNECT", {})
+				sendMessage(mess)
 			}
- 		}
+		}
 	}, [newMessage])
 
 	const question = (
@@ -103,30 +119,32 @@ export const PlayPage: React.FC = () => {
 
 		setTimeLeftMs({
 			timeLeft: ANS_TIME_MS,
-			intervalId: null
+			intervalId: null,
 		})
-
 	}
-
 	return (
 		<>
-			{connectionStatus === "Closed" ? (
+			{connectionStatus === "Closed" && !end ? (
 				<h1>Disconnected</h1>
 			) : (
-				<>
+				<div>
+					{end && standingPhase && <h1>Final Standing</h1>}
 					{standingPhase ? (
 						<StandingTable standingsData={standingsData} />
 					) : (
-						<>
-							{!currentQuestionData.text && <h1>Waiting for the Host to Start the Game...</h1>}
-							{timeLeftMs.timeLeft > 0 && currentQuestionData.text && 
-							<>
-								<Timebar timeLeftMs={timeLeftMs.timeLeft}/>
-								{question}
-							</>}
-						</>
+						<div>
+							{!currentQuestionData.text && (
+								<h1>Waiting for the Host to Start the Game...</h1>
+							)}
+							{timeLeftMs.timeLeft > 0 && currentQuestionData.text && (
+								<>
+									<Timebar timeLeftMs={timeLeftMs.timeLeft} />
+									{question}
+								</>
+							)}
+						</div>
 					)}
-				</>
+				</div>
 			)}
 		</>
 	)
