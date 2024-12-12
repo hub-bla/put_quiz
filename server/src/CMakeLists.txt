@@ -1,4 +1,4 @@
-file(GLOB HEADER_LIST CONFIGURE_DEPENDS "${CrappyTest_SOURCE_DIR}/include/server/*.hpp")
+file(GLOB HEADER_LIST CONFIGURE_DEPENDS "${PutQuiz_SOURCE_DIR}/include/server/*.hpp")
 file(GLOB IMPLEMENTATION_LIST CONFIGURE_DEPENDS "*.cpp")
 add_library(server_lib ${HEADER_LIST}
         ${IMPLEMENTATION_LIST})
@@ -10,6 +10,6 @@ target_compile_features(server_lib PUBLIC cxx_std_11)
 target_compile_options(server_lib PRIVATE -pthread)
 
 source_group(
-        TREE "${CrappyTest_SOURCE_DIR}/include"
+        TREE "${PutQuiz_SOURCE_DIR}/include"
         PREFIX "Header Files"
         FILES ${HEADER_LIST})

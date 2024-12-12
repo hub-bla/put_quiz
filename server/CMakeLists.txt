@@ -17,6 +17,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_compile_options(-Wall -Wextra -Wpedantic)
 
+set(PutQuiz_SOURCE_DIR ${CMAKE_SOURCE_DIR})
+
 include (CTest)
 
 add_subdirectory(thirdparty)
