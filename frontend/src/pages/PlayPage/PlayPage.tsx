@@ -1,3 +1,4 @@
+import { AnsweredSidebar } from "@/components/AnsweredSidebar"
 import { QuestionCard } from "@/components/QuestionCard"
 import StandingTable from "@/components/StandingTable/StandingTable"
 import { Timebar } from "@/components/Timebar"
@@ -10,6 +11,7 @@ import {
 } from "@/utils"
 import { useEffect, useState } from "react"
 import { ReadyState } from "react-use-websocket"
+import "./PlayPage.css"
 
 interface Timeout {
 	timeLeft: number
@@ -90,7 +92,7 @@ export const PlayPage: React.FC = () => {
 				}
 
 				if (currentQuestionData.text === data.question) {
-					setStandingPhase(true)
+					// setStandingPhase(true)
 				}
 			} else if (type === "standing") {
 				const { data } = newMessage as {
@@ -104,6 +106,7 @@ export const PlayPage: React.FC = () => {
 				setStandingsData(data)
 			} else if (type === "end") {
 				setEnd(true)
+				setStandingPhase(true)
 				const mess = preprocessMessage("DISCONNECT", {})
 				sendMessage(mess)
 			}
@@ -127,24 +130,29 @@ export const PlayPage: React.FC = () => {
 			{connectionStatus === "Closed" && !end ? (
 				<h1>Disconnected</h1>
 			) : (
-				<div>
-					{end && standingPhase && <h1>Final Standing</h1>}
+				<>
 					{standingPhase ? (
-						<StandingTable standingsData={standingsData} />
+						<div>
+							{end && <h1>Final Standing</h1>}
+							<StandingTable standingsData={standingsData} />
+						</div>
 					) : (
 						<div>
 							{!currentQuestionData.text && (
 								<h1>Waiting for the Host to Start the Game...</h1>
 							)}
-							{timeLeftMs.timeLeft > 0 && currentQuestionData.text && (
+							{!end && timeLeftMs.timeLeft > 0 && currentQuestionData.text && (
 								<>
-									<Timebar timeLeftMs={timeLeftMs.timeLeft} />
-									{question}
+									<div className='question-panel'>
+										<Timebar timeLeftMs={timeLeftMs.timeLeft} />
+										{question}
+									</div>
+									<AnsweredSidebar />
 								</>
 							)}
 						</div>
 					)}
-				</div>
+				</>
 			)}
 		</>
 	)

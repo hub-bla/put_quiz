@@ -11,17 +11,6 @@ interface StandingMessage {
 	standings: Standings
 }
 
-const MOCK_DATA: StandingMessage = {
-	numberOfQuestions: 10,
-	standings: {
-		ktos2: {
-			answeredCorrectly: 0,
-			answeredWrong: 5,
-			points: 10000,
-		},
-	},
-}
-
 interface StandingTableProps {
 	standingsData: StandingMessage
 }
@@ -29,8 +18,7 @@ interface StandingTableProps {
 const BASE_TOP_POS = 65
 const HEADER_SPACE_POS = 40
 
-const StandingTable: React.FC<StandingTableProps> = ({standingsData}) => {
-
+const StandingTable: React.FC<StandingTableProps> = ({ standingsData }) => {
 	// useEffect(() => {
 	// 	// NOTE: Following lines are just for testing animations
 	// 	const testId = setTimeout(() => {
@@ -66,7 +54,7 @@ const StandingTable: React.FC<StandingTableProps> = ({standingsData}) => {
 					key={username}
 					rank={rank + 1}
 					username={username}
-					numberOfQuestions={MOCK_DATA["numberOfQuestions"]}
+					numberOfQuestions={standingsData["numberOfQuestions"]}
 					standing={standing[1]}
 					startingPos={BASE_TOP_POS * (rank + 1)}
 				/>

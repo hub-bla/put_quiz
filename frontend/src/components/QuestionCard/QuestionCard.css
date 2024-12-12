@@ -1,0 +1,45 @@
+.question {
+	margin: auto;
+	width: 80%;
+	display: flex;
+	flex-direction: column;
+	gap: 75px;
+}
+
+.answer-button {
+	color: #fff;
+	padding: 50px 0;
+	font-size: 1.3rem;
+}
+
+.button-blue {
+	background-color: #4c589f;
+}
+
+.button-blue:hover:enabled {
+	background-color: #4c599fcf;
+}
+
+.button-green {
+	background-color: #4c9f7f;
+}
+
+.button-green:hover:enabled {
+	background-color: #4c9f7fdc;
+}
+
+.button-red {
+	background-color: #c43b6b;
+}
+
+.button-red:hover:enabled {
+	background-color: #c43b6bd8;
+}
+
+.button-yellow {
+	background-color: #d0c55b;
+}
+
+.button-yellow:hover:enabled {
+	background-color: #d0c45bc2;
+}

@@ -6,6 +6,10 @@ interface QuestionCardProps {
 	setAnswered: () => void
 }
 
+const BUTTON_COLOR_PREFIX = "button-"
+
+const buttonColors = ["green", "red", "blue", "yellow"]
+
 export const QuestionCard: React.FC<QuestionCardProps> = ({
 	question,
 	setAnswered,
@@ -23,7 +27,10 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
 
 	const answersButtons = answers.map((answer, idx) => {
 		return (
-			<button key={idx} onClick={() => sendAnswer(idx)}>
+			<button
+				key={idx}
+				onClick={() => sendAnswer(idx)}
+				className={`answer-button ${BUTTON_COLOR_PREFIX + buttonColors[idx]}`}>
 				{answer}
 			</button>
 		)
@@ -31,7 +38,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
 
 	return (
 		<div className='question'>
-			<h2>{text}</h2>
+			<h1>{text}</h1>
 			<div className='answers'>{answersButtons}</div>
 		</div>
 	)
