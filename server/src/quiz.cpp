@@ -1,6 +1,6 @@
 #include "server/quiz.hpp"
 #include <iostream>
-Quiz::Quiz(json content) { parse_content(content); };
+Quiz::Quiz(json content) { parse_content(content); }
 
 Quiz::~Quiz() {}
 
