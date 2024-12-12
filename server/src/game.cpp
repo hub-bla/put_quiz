@@ -9,7 +9,8 @@
 
 Game::Game(std::string code, int host_fd, const json &host_quiz)
     : host_desc(host_fd), game_code(std::move(code)), quiz(host_quiz),
-      is_started(false), current_question_answered(0), standings_updated(false) {
+      is_started(false), current_question_answered(0),
+      standings_updated(false) {
   standings["numberOfQuestions"] = quiz.get_number_of_questions();
   standings["standings"] = json();
 }
@@ -17,7 +18,7 @@ Game::Game(std::string code, int host_fd, const json &host_quiz)
 int Game::get_host_desc() const { return host_desc; }
 
 json Game::get_next_question() {
-  for(auto username: usernames){
+  for (auto username : usernames) {
     standings["standings"][username]["answered"] = 0;
   }
 
@@ -88,13 +89,13 @@ bool Game::answers_over_limit() {
              : false;
 }
 
-void Game::update_standings(){
-  if(standings_updated){
+void Game::update_standings() {
+  if (standings_updated) {
     return;
   }
-  for(auto username: usernames){
+  for (auto username : usernames) {
     auto &playerJSON = standings["standings"][username];
-    if(!playerJSON["answered"].get<int>() && is_started){
+    if (!playerJSON["answered"].get<int>() && is_started) {
       playerJSON["answeredWrong"] = playerJSON["answeredWrong"].get<int>() + 1;
     }
   }

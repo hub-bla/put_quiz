@@ -486,7 +486,5 @@ void send_timeout(const string &game_code, const json &timeout_message) {
     if (game->quiz.is_finished()) {
       game_broadcast(game, "end", game->standings);
     }
-
-
   }
 }
