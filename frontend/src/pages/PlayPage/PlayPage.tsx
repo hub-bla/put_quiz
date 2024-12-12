@@ -147,7 +147,7 @@ export const PlayPage: React.FC = () => {
 										<Timebar timeLeftMs={timeLeftMs.timeLeft} />
 										{question}
 									</div>
-									<AnsweredSidebar />
+									<AnsweredSidebar standingsData={standingsData} />
 								</>
 							)}
 						</div>
