@@ -21,6 +21,7 @@ public:
   bool is_started;
   std::chrono::steady_clock::time_point question_start;
   int current_question_answered;
+  bool standings_updated;
 
   Game(std::string code, int host_desc, const json &host_quiz);
 
@@ -37,4 +38,6 @@ public:
   int calculate_points();
 
   bool answers_over_limit();
+
+  void update_standings();
 };

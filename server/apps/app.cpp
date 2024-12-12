@@ -400,6 +400,7 @@ void next_question(const CallbackArgs &args) {
   const auto host = static_pointer_cast<Host>(args.client);
   const std::string &game_code = host->get_game_code();
   const auto &game = games[game_code];
+  game->update_standings();
   json question = game->get_next_question();
   if (question == nullptr) {
     spdlog::info("Game: [{0}] finished", game_code);
@@ -478,7 +479,10 @@ void send_timeout(const string &game_code, const json &timeout_message) {
   const auto &question = game->quiz.get_current_question();
   // send timeout only if it's for current question
   if (question["text"] == timeout_message["question"]) {
+    game->update_standings();
     game_broadcast(game, "timeout", timeout_message);
+    game_broadcast(game, "standing", game->standings);
+
     if (game->quiz.is_finished()) {
       game_broadcast(game, "end", game->standings);
     }
