@@ -1,0 +1,10 @@
+.question-panel {
+	position: absolute;
+	width: 80%;
+	height: 100vh;
+	left: 0;
+	top: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
