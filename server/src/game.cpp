@@ -1,6 +1,10 @@
 #include "server/game.hpp"
 #include <iostream>
 #include <utility>
+#include <cmath>
+
+#define TIME_FOR_ANS_MS 5000
+
 Game::Game(std::string code, int host_fd, const json &host_quiz)
     : host_desc(host_fd), game_code(std::move(code)), quiz(host_quiz),
       is_started(false) {
@@ -14,6 +18,7 @@ json Game::get_next_question() {
   if (!this->is_started) {
     this->is_started = true;
   }
+  question_start = std::chrono::steady_clock::now();
   return quiz.get_next_question();
 }
 
@@ -43,11 +48,20 @@ bool Game::submit_answer(const std::string &username, const json &answer) {
         standings["standings"][username]["answeredCorrectly"];
     auto &pointsJSON = standings["standings"][username]["points"];
     answeredCorrectlyJSON = answeredCorrectlyJSON.get<int>() + 1;
-    pointsJSON = pointsJSON.get<int>() + 100;
+    pointsJSON = pointsJSON.get<int>() + calculate_points();
   } else {
     auto &answeredWrongJSON = standings["standings"][username]["answeredWrong"];
     answeredWrongJSON = answeredWrongJSON.get<int>() + 1;
   }
 
   return true;
+}
+
+int Game::calculate_points(){
+  const auto now = std::chrono::steady_clock::now();
+  const auto int_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now - question_start);
+
+  double p_result = (1 - (std::pow(int_ms.count(),2) / std::pow(TIME_FOR_ANS_MS,2))) * 100;
+  int result = std::round(p_result);
+  return result>=0?result:0;
 }
