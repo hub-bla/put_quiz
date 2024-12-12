@@ -3,11 +3,13 @@
 #include <utility>
 #include <cmath>
 
+//todo create config file
 #define TIME_FOR_ANS_MS 5000
+#define ANSWER_LIMIT 0.5
 
 Game::Game(std::string code, int host_fd, const json &host_quiz)
     : host_desc(host_fd), game_code(std::move(code)), quiz(host_quiz),
-      is_started(false) {
+      is_started(false), current_question_answered(0){
   standings["numberOfQuestions"] = quiz.get_number_of_questions();
   standings["standings"] = json();
 }
@@ -18,6 +20,7 @@ json Game::get_next_question() {
   if (!this->is_started) {
     this->is_started = true;
   }
+  current_question_answered=0;
   question_start = std::chrono::steady_clock::now();
   return quiz.get_next_question();
 }
@@ -43,6 +46,7 @@ bool Game::submit_answer(const std::string &username, const json &answer) {
     return false; // answer is not for the current question
   }
 
+  current_question_answered++;
   if (quiz.validate_answer(answer)) {
     auto &answeredCorrectlyJSON =
         standings["standings"][username]["answeredCorrectly"];
@@ -64,4 +68,8 @@ int Game::calculate_points(){
   double p_result = (1 - (std::pow(int_ms.count(),2) / std::pow(TIME_FOR_ANS_MS,2))) * 100;
   int result = std::round(p_result);
   return result>=0?result:0;
+}
+
+bool Game::answers_over_limit(){
+    return static_cast<double>(current_question_answered) / players.size() >= ANSWER_LIMIT ? true:false;
 }

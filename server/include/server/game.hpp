@@ -20,6 +20,7 @@ public:
   Quiz quiz;
   bool is_started;
   std::chrono::steady_clock::time_point question_start;
+  int current_question_answered;
 
   Game(std::string code, int host_desc, const json &host_quiz);
 
@@ -34,4 +35,6 @@ public:
   bool submit_answer(const std::string &username, const json &answer);
 
   int calculate_points();
+
+  bool answers_over_limit();
 };

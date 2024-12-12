@@ -440,6 +440,10 @@ void answer(const CallbackArgs &args) {
     return;
   }
 
+  if(game->answers_over_limit()){
+    spdlog::debug("answers over limit, sending timeout...");
+  }
+
   game_broadcast(game, "standing", game->standings);
 }
 
