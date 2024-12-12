@@ -92,7 +92,7 @@ export const PlayPage: React.FC = () => {
 				}
 
 				if (currentQuestionData.text === data.question) {
-					// setStandingPhase(true)
+					setStandingPhase(true)
 				}
 			} else if (type === "standing") {
 				const { data } = newMessage as {
