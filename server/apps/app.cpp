@@ -440,7 +440,7 @@ void answer(const CallbackArgs &args) {
     return;
   }
 
-  if(game->answers_over_limit()){
+  if (game->answers_over_limit()) {
     json timeoutMessage;
     timeoutMessage["question"] = game->quiz.get_current_question()["text"];
     send_timeout(game_code, timeoutMessage);
