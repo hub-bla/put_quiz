@@ -403,6 +403,7 @@ void next_question(const CallbackArgs &args) {
   json question = game->get_next_question();
   if (question == nullptr) {
     spdlog::info("Game: [{0}] finished", game_code);
+    game_broadcast(game, "standing", game->standings);
     game_broadcast(game, "end", game->standings);
     return;
   }
