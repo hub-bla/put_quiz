@@ -2,7 +2,7 @@
 #include <iostream>
 Quiz::Quiz(json content) { parse_content(content); };
 
-Quiz::~Quiz(){};
+Quiz::~Quiz() {}
 
 json Quiz::get_next_question() {
   if (this->is_finished()) {
@@ -13,13 +13,13 @@ json Quiz::get_next_question() {
   count -= 1;
 
   return current_question.get_question();
-};
+}
 
-bool Quiz::is_finished() { return questions.empty(); };
+bool Quiz::is_finished() { return questions.empty(); }
 
 bool Quiz::validate_answer(const json &answer) {
   return current_question.validate_answer(answer);
-};
+}
 
 void Quiz::parse_content(const json &content) {
   for (auto &question : content["questions"]) {
@@ -27,7 +27,7 @@ void Quiz::parse_content(const json &content) {
     count++;
   };
   number_of_questions = count;
-};
+}
 
 int Quiz::get_number_of_questions() const { return number_of_questions; }
 

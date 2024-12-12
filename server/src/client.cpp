@@ -9,12 +9,12 @@ bool Client::send_buffered() { return messenger->sendBuffered(); }
 
 std::pair<std::string, json> Client::read_message() {
   return messenger->readMessage();
-};
+}
 
 void Client::add_message_to_send_buffer(const std::string &type,
                                         const std::string &message) {
   messenger->add_to_send_buffer(type, message);
-};
+}
 
 int Client::get_sock_fd() { return sock_fd; }
 
