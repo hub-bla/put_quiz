@@ -1,15 +1,6 @@
-import { Standing } from "./types"
 import StandingTableRow from "./StandingTableRow/StandingTableRow"
 import "./StandingTable.css"
-
-type Standings = {
-	[username: string]: Standing
-}
-
-interface StandingMessage {
-	numberOfQuestions: number
-	standings: Standings
-}
+import { StandingMessage } from "@/utils"
 
 interface StandingTableProps {
 	standingsData: StandingMessage
