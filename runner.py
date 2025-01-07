@@ -73,24 +73,22 @@ def make_config(config: dict, path=DEFAULT_FRONTEND_CONFIG_PATH) -> None:
 
 def run_proxy(config: dict, path=DEFAULT_PROXY_PATH) -> subprocess.Popen:
     print("Starting proxy...", end=" ")
-    command = f"./run {config['target']} {config['addr']}:{config['port']}".split()
+    exec_path = os.path.join(BASE_DIR, path, "run")
+    args = [config["target"], f"{config['addr']}:{config['port']}"]
+
     target = os.path.join(BASE_DIR, path)
 
     background_process = subprocess.Popen(
-        command,
+        executable=exec_path,
+        args=args,
         shell=True,
         stdout=subprocess.PIPE,
-        stderr=subprocess.DEVNULL,
+        stderr=subprocess.PIPE,
         text=True,
         cwd=target,
     )
-
-    for line in iter(background_process.stdout.readline, ""):
+    for line in iter(background_process.stderr.readline, ""):
         print(line.strip())
-        if "proxying" in str(line):
-            print(line.strip())
-            break
-
     print("Done")
     return background_process
 
