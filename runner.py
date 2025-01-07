@@ -129,10 +129,6 @@ def run_frontend(path=DEFAULT_FRONTEND_PATH) -> None:
 
 
 def main():
-    proxy_process = None
-    frontend_process = None
-
-    atexit.register(terminate_subprocesses, [proxy_process, frontend_process])
 
     config = parse_config()
     make_config(config)
@@ -141,6 +137,9 @@ def main():
     init_npm()
     proxy_process = run_proxy(config)
     frontend_process = run_frontend()
+
+    atexit.register(terminate_subprocesses, [proxy_process, frontend_process])
+
     print("Press Ctrl+C to exit")
     signal.pause()
 
