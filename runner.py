@@ -66,7 +66,7 @@ def init_npm(path=DEFAULT_FRONTEND_PATH) -> None:
 def make_config(config: dict, path=DEFAULT_FRONTEND_CONFIG_PATH) -> None:
     print("Making config...", end=" ")
     with open(path, "w") as f:
-        f.write(f"export const SOCKET_URL = 'ws://localhost:{config['target']}';")
+        f.write(f"export const SERVER_URL = 'ws://localhost:{config['target']}';")
 
     print("Done")
 
