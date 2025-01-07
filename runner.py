@@ -91,7 +91,6 @@ def run_proxy(config: dict, path=DEFAULT_PROXY_PATH) -> subprocess.Popen:
             print(line.strip())
             break
 
-    print("Done")
     return background_process
 
 
