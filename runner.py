@@ -30,10 +30,18 @@ def parse_config() -> dict:
 
 
 def init_submodules() -> None:
-    print("Initializing submodules...", end=" ")
+    print("Initializing submodules...")
     command = "git submodule update --init --recursive"
 
-    subprocess.run(command, shell=True, capture_output=True, text=True, cwd=BASE_DIR)
+    process = subprocess.Popen(
+        command,
+        shell=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        cwd=BASE_DIR,
+    )
+
+    process.wait()
 
     print("Done")
 
@@ -43,8 +51,15 @@ def init_npm(path=DEFAULT_FRONTEND_PATH) -> None:
     command = "npm install"
     target = os.path.join(BASE_DIR, path)
 
-    subprocess.run(command, shell=True, capture_output=True, text=True, cwd=target)
+    process = subprocess.Popen(
+        command,
+        shell=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        cwd=target,
+    )
 
+    process.wait()
     print("Done")
 
 
@@ -64,10 +79,15 @@ def run_proxy(config: dict, path=DEFAULT_PROXY_PATH) -> subprocess.Popen:
     background_process = subprocess.Popen(
         command,
         shell=True,
-        stdout=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
         stderr=subprocess.DEVNULL,
         cwd=target,
     )
+
+    for line in iter(background_process.stdout.readline, ""):
+        if "proxying" in str(line):
+            print(line.strip())
+            break
 
     print("Done")
     return background_process
@@ -78,7 +98,16 @@ def run_frontend(path=DEFAULT_FRONTEND_PATH) -> None:
 
     command = "npm run build"
     target = os.path.join(BASE_DIR, path)
-    subprocess.run(command, shell=True, capture_output=True, text=True, cwd=target)
+
+    process = subprocess.Popen(
+        command,
+        shell=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        cwd=target,
+    )
+
+    process.wait()
 
     command = "npm run preview"
     target = os.path.join(BASE_DIR, path)
