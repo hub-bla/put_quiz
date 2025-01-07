@@ -1,26 +1,11 @@
-![](./lecina.png)
-
-## Init submodules
-```
-git submodule update --init --recursive
-```
-
-## Run websockify
-
-In `put_quiz/proxy/websockify` directory:
-```
-./run 8080 127.0.0.1:8913
-```
-
 ## Run frontend
-In `put_quiz/frontend` directory:
+Make sure the config.txt file contains the following settings:  
 ```
-npm i
-npm run dev
+addr:[address of the server, e.g., 127.0.0.1]  
+port:[port where the server will run, e.g., 8913]    
+target:[port of the frontend application, e.g., 8080]
 ```
-
-## Run cpp linter
-In `put_quiz/server` directory:
+Run driver script, frontend would build and start
 ```
-python3 ./scripts/python/run-clang-format.py -ir src apps include
+python[3] runner.py
 ```

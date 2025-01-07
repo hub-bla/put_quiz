@@ -1,11 +1,13 @@
 import subprocess
 import os
 import atexit
-import webbrowser
 import signal
 
 DEFAULT_PROXY_PATH = os.path.join("proxy", "websockify")
 DEFAULT_FRONTEND_PATH = os.path.join("frontend")
+DEFAULT_FRONTEND_CONFIG_PATH = os.path.join(
+    "frontend", "src", "utils", "constants", "socket.ts"
+)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -42,6 +44,14 @@ def init_npm(path=DEFAULT_FRONTEND_PATH) -> None:
     target = os.path.join(BASE_DIR, path)
 
     subprocess.run(command, shell=True, capture_output=True, text=True, cwd=target)
+
+    print("Done")
+
+
+def make_config(config: dict, path=DEFAULT_FRONTEND_CONFIG_PATH) -> None:
+    print("Making config...", end=" ")
+    with open(path, "w") as f:
+        f.write(f"export const SOCKET_URL = 'ws://localhost:{config['target']}';")
 
     print("Done")
 
@@ -93,11 +103,15 @@ def main():
     frontend_process = None
 
     atexit.register(terminate_subprocesses, [proxy_process, frontend_process])
+
     config = parse_config()
+    make_config(config)
+
     init_submodules()
     init_npm()
     proxy_process = run_proxy(config)
     frontend_process = run_frontend()
+    print("Press Ctrl+C to exit")
     signal.pause()
 
 
