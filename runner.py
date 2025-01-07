@@ -79,16 +79,18 @@ def run_proxy(config: dict, path=DEFAULT_PROXY_PATH) -> subprocess.Popen:
     target = os.path.join(BASE_DIR, path)
 
     background_process = subprocess.Popen(
-        executable=exec_path,
-        args=args,
-        shell=True,
+        [exec_path] + args,
+        shell=False,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
         cwd=target,
     )
     for line in iter(background_process.stderr.readline, ""):
-        print(line.strip())
+        if "proxying" in str(line):
+            print(line.strip())
+            break
+
     print("Done")
     return background_process
 
