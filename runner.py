@@ -30,7 +30,7 @@ def parse_config() -> dict:
 
 
 def init_submodules() -> None:
-    print("Initializing submodules...")
+    print("Initializing submodules...", end=" ")
     command = "git submodule update --init --recursive"
 
     process = subprocess.Popen(
@@ -81,10 +81,12 @@ def run_proxy(config: dict, path=DEFAULT_PROXY_PATH) -> subprocess.Popen:
         shell=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.DEVNULL,
+        text=True,
         cwd=target,
     )
 
     for line in iter(background_process.stdout.readline, ""):
+        print(line.strip())
         if "proxying" in str(line):
             print(line.strip())
             break
