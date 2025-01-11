@@ -67,17 +67,6 @@ std::pair<std::string, json> MessageHandler::readMessage() {
     read_header -= bytes_read;
   }
 
-  if (read_header < 0) {
-    // now we have full header
-    const auto surplus = (message_header.size() - message_header_size);
-    const auto surplus_str = message_header.substr(
-        message_header_size, message_header_size + surplus);
-
-    message_header = message_header.erase(message_header_size);
-    currently_read += surplus_str;
-    read_header += surplus;
-  }
-
   if (read_header == 0) {
     if (read_message_size == 0) {
       std::vector<std::string> header_part = split(message_header, '\n');
@@ -93,14 +82,27 @@ std::pair<std::string, json> MessageHandler::readMessage() {
 
   if (!currently_read.empty() &&
       read_message_size == static_cast<int>(currently_read.size())) {
-    json json_message = json::parse(currently_read);
     std::string message_type = read_message_type;
+
+    bool error_occurred = false;
+    json json_message;
+    try {
+      json_message = json::parse(currently_read);
+    } catch (const nlohmann::json::parse_error &e) {
+      spdlog::error("Couldn't parse json from client {0} - {1}", client_fd,
+                    e.what());
+      error_occurred = true;
+    }
 
     read_message_type = "";
     currently_read = "";
     message_header = "";
     read_header = 100;
     read_message_size = 0;
+    if (error_occurred) {
+      return {"", nullptr};
+    }
+
     spdlog::debug("Currently read for desc [{0}]", client_fd);
     return {message_type, json_message};
   }

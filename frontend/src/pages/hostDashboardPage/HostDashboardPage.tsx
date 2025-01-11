@@ -1,11 +1,18 @@
 import StandingTable from "@/components/StandingTable/StandingTable"
 import { QuestionPreview } from "@/components/QuestionPreview"
-import { StandingMessage, Question, useSocketContext } from "@/utils"
+import { StandingMessage, Question, useSocketContext, useUserContext } from "@/utils"
 import { useEffect, useState } from "react"
 import "./HostDashboardPage.css"
+import { useNavigate } from "react-router-dom"
 
 export const HostDashboardPage: React.FC = () => {
 	const { preprocessMessage, sendMessage, newMessage } = useSocketContext()
+	const { userType } = useUserContext()
+	const navigate = useNavigate()
+
+	if (userType !== "host") {
+		navigate("/")
+	}
 
 	const [standingsData, setStandingsData] = useState<StandingMessage>({
 		numberOfQuestions: 0,

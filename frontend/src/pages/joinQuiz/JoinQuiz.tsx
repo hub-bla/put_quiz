@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import "./joinQuiz.css"
-import { PLAY_ROUTE, useSocketContext } from "@/utils"
+import { PLAY_ROUTE, useSocketContext, useUserContext } from "@/utils"
 import { useNavigate } from "react-router-dom"
 
 export const JoinQuiz: React.FC = () => {
@@ -13,6 +13,11 @@ export const JoinQuiz: React.FC = () => {
 	const { preprocessMessage, sendMessage, newMessage } = useSocketContext()
 	const [prevMessageType, setPrevMessageType] = useState("")
 	const navigate = useNavigate()
+	const { userType } = useUserContext()
+
+	if (userType !== "player") {
+		navigate("/")
+	}
 
 	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { id, value } = e.target

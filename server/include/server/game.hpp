@@ -1,3 +1,4 @@
+#pragma once
 #include "client.hpp"
 #include "quiz.hpp"
 #include <chrono>
@@ -18,10 +19,10 @@ public:
   std::unordered_set<std::string> usernames;
 
   Quiz quiz;
-  bool is_started;
+  bool is_started = false;
   std::chrono::steady_clock::time_point question_start;
-  int current_question_answered;
-  bool standings_updated;
+  int current_question_answered = 0;
+  bool standings_updated = false;
 
   Game(std::string code, int host_desc, const json &host_quiz);
 

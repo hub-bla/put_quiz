@@ -8,10 +8,12 @@ import {
 	StandingMessage,
 	TIMEBAR_UPDATE_MS,
 	useSocketContext,
+	useUserContext,
 } from "@/utils"
 import { useEffect, useState } from "react"
 import { ReadyState } from "react-use-websocket"
 import "./PlayPage.css"
+import { useNavigate } from "react-router-dom"
 
 interface Timeout {
 	timeLeft: number
@@ -46,6 +48,13 @@ export const PlayPage: React.FC = () => {
 
 	const setAnswered = () => {
 		setStandingPhase(true)
+	}
+
+	const { userType } = useUserContext()
+	const navigate = useNavigate()
+
+	if (userType !== "player") {
+		navigate("/")
 	}
 
 	const connectionStatus = {
