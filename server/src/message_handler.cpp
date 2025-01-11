@@ -63,7 +63,7 @@ std::pair<std::string, json> MessageHandler::readMessage() {
   }
 
   if (read_header > 0) {
-    message_header.append(readBuffer.data());
+    message_header.append(readBuffer.data(), bytes_read);
     read_header -= bytes_read;
   }
 
