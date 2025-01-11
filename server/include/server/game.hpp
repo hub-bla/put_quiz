@@ -1,3 +1,4 @@
+#pragma once
 #include "client.hpp"
 #include "quiz.hpp"
 #include <chrono>
