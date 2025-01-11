@@ -67,17 +67,6 @@ std::pair<std::string, json> MessageHandler::readMessage() {
     read_header -= bytes_read;
   }
 
-  if (read_header < 0) {
-    // now we have full header
-    const auto surplus = (message_header.size() - message_header_size);
-    const auto surplus_str = message_header.substr(
-        message_header_size, message_header_size + surplus);
-
-    message_header = message_header.erase(message_header_size);
-    currently_read += surplus_str;
-    read_header += surplus;
-  }
-
   if (read_header == 0) {
     if (read_message_size == 0) {
       std::vector<std::string> header_part = split(message_header, '\n');
