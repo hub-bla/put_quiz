@@ -212,7 +212,7 @@ int main() {
 
         epoll_event client_events{};
         clients[client_fd] = make_shared<Client>(client_fd);
-        client_events.events = EPOLLIN | EPOLLHUP | EPOLLOUT;
+        client_events.events = EPOLLIN;
         client_events.data.fd = client_fd;
         epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &client_events);
         spdlog::info("New client with sock desc {0}", client_fd);
@@ -239,7 +239,7 @@ int main() {
                           client_fd);
             epoll_event client_events{};
             client_events.data.fd = client_fd;
-            client_events.events = EPOLLIN | EPOLLHUP;
+            client_events.events = EPOLLIN;
             epoll_ctl(epoll_fd, EPOLL_CTL_MOD, client_fd, &client_events);
           }
         }
