@@ -13,7 +13,7 @@ export const JoinQuiz: React.FC = () => {
 	const { preprocessMessage, sendMessage, newMessage } = useSocketContext()
 	const [prevMessageType, setPrevMessageType] = useState("")
 	const navigate = useNavigate()
-	const { userType } = useUserContext()
+	const { userType, setUsernameIfPlayer } = useUserContext()
 
 	if (userType !== "player") {
 		navigate("/")
@@ -42,6 +42,7 @@ export const JoinQuiz: React.FC = () => {
 			const { type } = newMessage
 			console.log("VALIDATE DATA: ", type)
 			if (type === "ok") {
+				setUsernameIfPlayer(formData.username)
 				navigate("/" + PLAY_ROUTE)
 			} else if (type === "error") {
 				const { data } = newMessage

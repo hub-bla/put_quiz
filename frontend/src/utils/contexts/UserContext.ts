@@ -4,8 +4,10 @@ type UserType = "client" | "player" | "host"
 
 interface IUserContext {
     userType: UserType
+    username: string
     setUserTypeToHost: () => void
     setUserTypeToPlayer: () => void
+    setUsernameIfPlayer: (username: string) => void
 }
 
 export const UserContext = createContext<IUserContext | null>(null)
@@ -24,7 +26,7 @@ export const useUserContext = () => {
 
 export const useUserContextValues = () => {
     const [userType, setUserType] = useState<UserType>("client")
-
+    const [username, setUsername] = useState("")
 
     const setUserTypeToHost = () => {
         setUserType("host")
@@ -34,5 +36,7 @@ export const useUserContextValues = () => {
         setUserType("player")
     }
 
-    return {userType, setUserTypeToHost, setUserTypeToPlayer}
+    const setUsernameIfPlayer = (un: string) => (userType == "player" && setUsername(un))
+
+    return {userType, setUserTypeToHost, setUserTypeToPlayer, setUsernameIfPlayer, username}
 }

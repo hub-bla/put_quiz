@@ -10,30 +10,6 @@ const BASE_TOP_POS = 65
 const HEADER_SPACE_POS = 40
 
 const StandingTable: React.FC<StandingTableProps> = ({ standingsData }) => {
-	// useEffect(() => {
-	// 	// NOTE: Following lines are just for testing animations
-	// 	const testId = setTimeout(() => {
-	// 		setStandingsData((prev) => {
-	// 			const newPoints = prev["standings"].map((standing) => standing)
-
-	// 			newPoints[1]["points"] = 1000
-	// newPoints[1]["answeredCorrectly"] = 8
-	// 			newPoints[1]["answeredWrong"] = 2
-	// 			newPoints[2]["points"] = 20
-	// 			newPoints[2]["answeredCorrectly"] = 7
-	// 			newPoints[2]["answeredWrong"] = 3
-	// 			return {
-	// 				...prev,
-	// 				standings: newPoints,
-	// 			}
-	// 		})
-	// 	}, 3000)
-
-	// 	return () => {
-	// 		clearTimeout(testId)
-	// 	}
-	// }, [])
-
 	const tableData = Object.entries(standingsData["standings"])
 		.sort(
 			(standing1, standing2) => standing2[1]["points"] - standing1[1]["points"]
