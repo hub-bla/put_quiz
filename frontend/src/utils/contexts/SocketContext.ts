@@ -90,8 +90,6 @@ export const useSockContextValues = () => {
 			const bytesAvailableToRead = Math.min(bytesToRead, readBuffer.length)
 			const readStr = readBuffer.slice(0, bytesAvailableToRead)
 
-			// remember to remove thign that were read
-
 			if (readHeader > 0) {
 				messageHeader += readStr
 				readHeader -= bytesAvailableToRead
@@ -137,8 +135,6 @@ export const useSockContextValues = () => {
 				messageSize,
 				message,
 			})
-			// console.log("message", messageHeader)
-			console.log("readbuffer", readBuffer)
 
 			setCurrentlyReadMess({
 				messageHeader,
