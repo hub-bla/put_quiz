@@ -1,5 +1,5 @@
 import { QuizPreview } from "@/components/QuizPreview"
-import { HOST_LOBBY_ROUTE, Quiz, useSocketContext } from "@/utils"
+import { HOST_LOBBY_ROUTE, Quiz, useSocketContext, useUserContext } from "@/utils"
 import { ChangeEvent, useState } from "react"
 import "./createQuiz.css"
 import { useNavigate } from "react-router-dom"
@@ -7,7 +7,13 @@ import { useNavigate } from "react-router-dom"
 export const CreateQuiz: React.FC = () => {
 	const [quizData, setQuizData] = useState<Quiz>()
 	const { preprocessMessage, sendMessage } = useSocketContext()
+	const { userType } = useUserContext()
 	const navigate = useNavigate()
+
+	if (userType !== "host") {
+		navigate("/")
+	}
+
 	const getQuizData = (e: ChangeEvent<HTMLInputElement>) => {
 		const { files } = e.target
 		if (files && files?.length > 0) {
@@ -28,7 +34,7 @@ export const CreateQuiz: React.FC = () => {
 	return (
 		<div>
 			<div className='manipulation'>
-				<button disabled={!quizData} onClick={(e) => sendQuiz()}>
+				<button disabled={!quizData} onClick={() => sendQuiz()}>
 					Create game
 				</button>
 				<input type='file' accept='.json' onChange={getQuizData} />
