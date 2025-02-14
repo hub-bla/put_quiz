@@ -3,7 +3,7 @@ import { Standing } from "../types"
 import AnswerBar from "./AnswersBar/AnswerBar"
 import "./StandingTableRow.css"
 import "../StandingTable.css"
-import { useMediaQueries } from "@/utils"
+import { useMediaQueries, useUserContext } from "@/utils"
 
 interface StandingTableRowProps {
 	rank: number
@@ -23,6 +23,7 @@ const StandingTableRow: React.FC<StandingTableRowProps> = ({
 	const [rowTop, setRowTop] = useState(startingPos)
 	const { answeredCorrectly, answeredWrong, points } = standing
 	const { md } = useMediaQueries()
+	const {username:playerUsername} = useUserContext()
 
 	useEffect(() => {
 		const moveRowTimeoutId = setTimeout(() => {
@@ -35,7 +36,7 @@ const StandingTableRow: React.FC<StandingTableRowProps> = ({
 	}, [startingPos])
 
 	return (
-		<div style={{ top: rowTop }} className='standing-row animate-row'>
+		<div style={{ top: rowTop }} className={`standing-row animate-row ${playerUsername===username ? "this-player" : ""}`}>
 			<div className='rank'>{rank}</div>
 			<div className='username'>{username}</div>
 			<div className='answers'>
